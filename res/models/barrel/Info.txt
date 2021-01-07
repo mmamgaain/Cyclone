@@ -1,0 +1,13 @@
+The model is available in both .max & .fbx. The model is made with games as a primary application.
+the model's UV is unwrapped, and compatible textures for the UV is given.
+
+the model has been tested in unreal engine 4.18 with a material (made of given textures) and looks great.
+the models details :
+	2067 polys
+	4222 tris
+	2139 verts
+
+not the most efficient but makes the model look good, efficiency comes at the cost of looks.
+
+the models vert / face count can be reduced by making those rings in the mid-section 'fake' (using normal mapping)
+and reducing the faces in the curved side of the cylinder (giving a less round look around the edges)
