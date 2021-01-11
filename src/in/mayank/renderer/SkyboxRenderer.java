@@ -63,6 +63,15 @@ public class SkyboxRenderer extends Renderer {
 	private float speed = 0;
 	private int direction = MOVE_DIRECTION_NONE;
 	
+	public SkyboxRenderer(final String vertexFile, final String fragmentFile, final Matrix4f projection, final Loader loader, final int skyCubeTexture) {
+		model = loader.loadToVAO(VERTICES, 3);
+		shader = new SkyboxShader(vertexFile, fragmentFile);
+		shader.start();
+		shader.loadProjectionMatrix(projection);
+		shader.stop();
+		textureID = skyCubeTexture;
+	}
+	
 	/** Creates a Skybox renderer with the supplied parameters.
 	 * 
 	 * @param vertexFile The vertex shader file path.
@@ -80,70 +89,24 @@ public class SkyboxRenderer extends Renderer {
 	 * 6. Front face.
 	 * </ol> */
 	public SkyboxRenderer(final String vertexFile, final String fragmentFile, final Matrix4f projection, final Loader loader, final String[] textureFiles) {
-		model = loader.loadToVAO(VERTICES, 3);
-		shader = new SkyboxShader(vertexFile, fragmentFile);
-		shader.start();
-		shader.loadProjectionMatrix(projection);
-		shader.stop();
-		decodeTextureFilenames(textureFiles, loader);
+		this(vertexFile, fragmentFile, projection, loader, loader.loadTextureCubeMap(textureFiles));
 	}
 	
 	public SkyboxRenderer(final String vertexFile, final String fragmentFile, final Matrix4f projection, final Loader loader, final String filename) {
-		model = loader.loadToVAO(VERTICES, 3);
-		shader = new SkyboxShader(vertexFile, fragmentFile);
-		shader.start();
-		shader.loadProjectionMatrix(projection);
-		shader.stop();
-		textureID = loader.loadTextureCubeMap(filename);
+		this(vertexFile, fragmentFile, projection, loader, loader.loadTextureCubeMap(filename));
 	}
 	
-	public SkyboxRenderer(final String vertexFile, final String fragmentFile, final Matrix4f projection, final Loader loader, final int skyCubeTexture) {
-		model = loader.loadToVAO(VERTICES, 3);
-		shader = new SkyboxShader(vertexFile, fragmentFile);
-		shader.start();
-		shader.loadProjectionMatrix(projection);
-		shader.stop();
-		textureID = skyCubeTexture;
-	}
+	public SkyboxRenderer setTexture(final String[] textureFiles, final Loader loader) { textureID = loader.loadTextureCubeMap(textureFiles); return this; }
 	
-	private void decodeTextureFilenames(final String[] textureFiles, final Loader loader) {
-		final boolean[] flip = new boolean[textureFiles.length];
-		final String[] textureText = new String[textureFiles.length];
-		for(int i = 0; i < textureFiles.length; i++) {
-			final String[] tokens = textureFiles[i].split(";");
-			textureText[i] = tokens[0];
-			flip[i] = tokens.length > 1 && tokens[1].equalsIgnoreCase("true") ? true : false;
-		}
-		textureID = loader.loadTextureCubeMap(textureText, flip);
-	}
+	public SkyboxRenderer setTexture(final String filename, final Loader loader) { textureID = loader.loadTextureCubeMap(filename); return this; }
 	
-	public SkyboxRenderer setTexture(final String[] textureFiles, final Loader loader) {
-		decodeTextureFilenames(textureFiles, loader);
-		return this;
-	}
+	public int getTexture() { return textureID; }
 	
-	public SkyboxRenderer setTexture(final String filename, final Loader loader) {
-		textureID = loader.loadTextureCubeMap(filename);
-		return this;
-	}
+	public SkyboxRenderer setRotation(final float speed, final int direction) { this.speed = speed; this.direction = direction; return this; }
 	
-	public int getTexture() {
-		return textureID;
-	}
+	public float getSpeed() { return speed; }
 	
-	public SkyboxRenderer setRotation(final float speed, final int direction) {
-		this.speed = speed;
-		this.direction = direction;
-		return this;
-	}
-	
-	public float getSpeed() {
-		return speed;
-	}
-	
-	public int getDirection() {
-		return direction;
-	}
+	public int getDirection() { return direction; }
 	
 	protected void prepareRender(final RawModel model, final Matrix4f view) {
 		super.prepareRender(model);

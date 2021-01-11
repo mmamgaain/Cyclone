@@ -160,6 +160,8 @@ class ModelShader extends Shader {
 		loadUniform("material.ambient", material.getAmbientColor());
 		loadUniform("material.specular", material.getSpecularColor());
 		loadUniform("numberOfRows", material.getNumberOfRows());
+		loadUniform("material.hasFresnel", material.hasFresnel());
+		loadUniform("material.fresnelPower", material.getFresnelPower());
 	}
 	
 	void loadSkyColor(float red, float green, float blue) {

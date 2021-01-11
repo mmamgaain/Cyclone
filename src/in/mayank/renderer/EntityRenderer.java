@@ -20,14 +20,14 @@ import in.mayank.shader.Shader;
 
 public class EntityRenderer extends Renderer {
 	
-	private EntityShader shader;
-	protected Light light = null;
+	private final EntityShader shader;
+	protected final Light light;
 	protected float ambientLightIntensity;
 	protected int staticEnviroMap = NO_TEXTURE;
 	
 	protected float fogDensity = 0F, fogGradient = 1F;
 	
-	public EntityRenderer(String vertexFile, String fragmentFile, Matrix4f projection) {
+	public EntityRenderer(final String vertexFile, final String fragmentFile, final Matrix4f projection) {
 		shader = new EntityShader(vertexFile, fragmentFile);
 		shader.start();
 		shader.loadProjectionMatrix(projection);
@@ -36,7 +36,7 @@ public class EntityRenderer extends Renderer {
 		ambientLightIntensity = 0.2F;
 	}
 	
-	public EntityRenderer setFogVariables(float density, float gradient) {
+	public EntityRenderer setFogVariables(final float density, final float gradient) {
 		fogDensity = density;
 		fogGradient = gradient;
 		return this;
@@ -54,7 +54,7 @@ public class EntityRenderer extends Renderer {
 		return ambientLightIntensity;
 	}
 	
-	public EntityRenderer setAmbientLightIntensity(float ambientLightIntensity) {
+	public EntityRenderer setAmbientLightIntensity(final float ambientLightIntensity) {
 		this.ambientLightIntensity = Maths.clamp(ambientLightIntensity, 0, 1);
 		return this;
 	}
@@ -63,27 +63,27 @@ public class EntityRenderer extends Renderer {
 		return light;
 	}
 	
-	public EntityRenderer setLight(Light light) {
+	public EntityRenderer setLight(final Light light) {
 		this.light.set(light);
 		return this;
 	}
 	
-	public EntityRenderer setLight(Vector3f position, Vector3f color) {
+	public EntityRenderer setLight(final Vector3f position, final Vector3f color) {
 		light.setPosition(position).setColor(color);
 		return this;
 	}
 	
-	public EntityRenderer increaseLight(Vector3f position, Vector3f color) {
+	public EntityRenderer increaseLight(final Vector3f position, final Vector3f color) {
 		light.increasePosition(position).increaseColor(color);
 		return this;
 	}
 	
-	public EntityRenderer increaseLight(float delPosX, float delPosY, float delPosZ, float delColR, float delColG, float delColB) {
+	public EntityRenderer increaseLight(final float delPosX, final float delPosY, final float delPosZ, final float delColR, final float delColG, final float delColB) {
 		light.increasePosition(delPosX, delPosY, delPosZ).increaseColor(delColR, delColG, delColB);
 		return this;
 	}
 	
-	public EntityRenderer setStaticEnvironmentMap(int enviroMap) {
+	public EntityRenderer setStaticEnvironmentMap(final int enviroMap) {
 		staticEnviroMap = enviroMap;
 		return this;
 	}
@@ -97,9 +97,9 @@ public class EntityRenderer extends Renderer {
 		return staticEnviroMap > NO_TEXTURE;
 	}
 	
-	protected void prepareRender(Entity entity, Matrix4f view) {
+	protected void prepareRender(final Entity entity, final Matrix4f view) {
 		prepareRender(entity.getModel());
-		Material material = entity.getMaterial();
+		final Material material = entity.getMaterial();
 		loadTexture2D(0, material.getDiffuseTexture());
 		loadTexture2D(1, material.getNormalMap());
 		loadTexture2D(2, material.getSpecularMap());
@@ -116,9 +116,9 @@ public class EntityRenderer extends Renderer {
 		if(material.isDoubleSided()) disableCulling();
 	}
 	
-	protected void prepareTexturedModel(TexturedModel model) {
+	protected void prepareTexturedModel(final TexturedModel model) {
 		prepareRender(model.getModel());
-		Material material = model.getMaterial();
+		final Material material = model.getMaterial();
 		loadTexture2D(0, material.getDiffuseTexture());
 		loadTexture2D(1, material.getNormalMap());
 		loadTexture2D(2, material.getSpecularMap());
@@ -126,12 +126,12 @@ public class EntityRenderer extends Renderer {
 		if(material.isDoubleSided()) disableCulling();
 	}
 	
-	protected void prepareInstance(Entity entity) {
+	protected void prepareInstance(final Entity entity) {
 		shader.loadModelMatrix(Maths.createTransformationMatrix(entity.getPosition(), entity.getRotation(), entity.getScale()));
 		shader.loadTextureAtlasOffset(entity.getTextureOffset());
 	}
 	
-	public void render(Map<TexturedModel, List<Entity>> entities, Matrix4f view, Vector4f clipPlane) {
+	public void render(final Map<TexturedModel, List<Entity>> entities, final Matrix4f view, final Vector4f clipPlane) {
 		shader.start();
 		shader.loadViewMatrix(view);
 		shader.loadTime((float)Core.getElapsedTimeInSeconds());
@@ -144,8 +144,8 @@ public class EntityRenderer extends Renderer {
 		for(TexturedModel model : entities.keySet()) {
 			prepareTexturedModel(model);
 			shader.loadLight(light, view, model.getMaterial().hasNormalMap());
-			List<Entity> batch = entities.get(model);
-			for(Entity entity : batch) {
+			final List<Entity> batch = entities.get(model);
+			for(final Entity entity : batch) {
 				prepareInstance(entity.update());
 				drawTriangleCall(entity.getModel());
 			}
@@ -155,7 +155,7 @@ public class EntityRenderer extends Renderer {
 		shader.stop();
 	}
 	
-	public void render(Entity entity, Matrix4f view) {
+	public void render(final Entity entity, final Matrix4f view) {
 		shader.start();
 		prepareRender(entity, view);
 		drawTriangleCall(entity.getModel());
@@ -171,18 +171,18 @@ public class EntityRenderer extends Renderer {
 
 class EntityShader extends Shader {
 	
-	public EntityShader(String vertexFile, String fragmentFile) {
+	public EntityShader(final String vertexFile, final String fragmentFile) {
 		super(vertexFile, fragmentFile);
 		remapTextureSamplerName(0, "material.texture0");
 		remapTextureSamplerName(1, "material.normalMap");
 		remapTextureSamplerName(2, "material.specularMap");
 	}
 	
-	void loadClipPlane(Vector4f clipPlane) {
+	void loadClipPlane(final Vector4f clipPlane) {
 		loadUniform("clipPlane", clipPlane);
 	}
 	
-	void loadMaterial(Material material) {
+	void loadMaterial(final Material material) {
 		loadUniform("material.hasDiffuseTexture", material.hasDiffuseTexture());
 		loadUniform("material.hasNormalMap", material.hasNormalMap());
 		loadUniform("hasNormalMap", material.hasNormalMap());
@@ -197,39 +197,41 @@ class EntityShader extends Shader {
 		loadUniform("material.ambient", material.getAmbientColor());
 		loadUniform("material.specular", material.getSpecularColor());
 		loadUniform("numberOfRows", material.getNumberOfRows());
+		loadUniform("material.hasFresnel", material.hasFresnel());
+		loadUniform("material.fresnelPower", material.getFresnelPower());
 	}
 	
-	void loadSkyColor(float red, float green, float blue) {
+	void loadSkyColor(final float red, final float green, final float blue) {
 		loadUniform("skyColor", red, green, blue);
 	}
 	
-	void loadFogVariables(float density, float gradient) {
+	void loadFogVariables(final float density, final float gradient) {
 		loadUniform("fogDensity", density);
 		loadUniform("fogGradient", gradient);
 	}
 	
-	void loadTextureAtlasOffset(Vector2f offset) {
+	void loadTextureAtlasOffset(final Vector2f offset) {
 		loadUniform("offset", offset);
 	}
 	
-	void loadLight(Light light, Matrix4f view, boolean inEyeSpace) {
+	void loadLight(final Light light, final Matrix4f view, final boolean inEyeSpace) {
 		loadUniform("lightPos", light.getPosition());
 		if(inEyeSpace) loadUniform("lightPosEyeSpace", getLightPositionEyeSpace(light.getPosition(), view));
 		loadUniform("lightColor", light.getColor());
 		loadUniform("lightAttenuation", light.getAttenuation());
 	}
 	
-	private Vector3f getLightPositionEyeSpace(Vector3f pos, Matrix4f view) {
-		Vector4f eyeSpacePos = new Vector4f(pos.x, pos.y, pos.z, 1F);
+	private Vector3f getLightPositionEyeSpace(final Vector3f pos, final Matrix4f view) {
+		final Vector4f eyeSpacePos = new Vector4f(pos.x, pos.y, pos.z, 1F);
 		view.transform(eyeSpacePos, eyeSpacePos);
 		return new Vector3f(eyeSpacePos.x, eyeSpacePos.y, eyeSpacePos.z);
 	}
 	
-	void loadAmbientLightIntensity(float ambient) {
+	void loadAmbientLightIntensity(final float ambient) {
 		loadUniform("ambientLightIntensity", ambient);
 	}
 	
-	void loadHasEnviroMap(boolean enviroMap) {
+	void loadHasEnviroMap(final boolean enviroMap) {
 		loadUniform("hasEnviroMap", enviroMap);
 	}
 	

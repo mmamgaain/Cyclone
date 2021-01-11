@@ -8,8 +8,8 @@ out vec4 color;
 
 struct Material {
 	sampler2D texture0 /* Diffuse texture */, normalMap, specularMap;
-	float shineDamper, reflectivity, transparency;
-	bool hasDiffuseTexture, hasNormalMap, hasSpecularMap, isTransparent;
+	float shineDamper, reflectivity, transparency, fresnelPower;
+	bool hasDiffuseTexture, hasNormalMap, hasSpecularMap, isTransparent, hasFresnel;
 	vec3 diffuse, ambient, specular;
 };
 uniform Material material;
@@ -55,10 +55,16 @@ void main(void){
 	color = (vec4(diffuse, 1.0) * textureColor) + vec4(finalSpecular, 0.0);
 	color = mix(vec4(skyColor, 1.0), color, visibility);
 	
+	float fresnelFactor = pow(max(dot(unitNormal, toCameraVector), 0.0), 1.0 / material.fresnelPower);
+	// Fresnel effect
+	if(material.hasFresnel) color = mix(vec4(lightColor, 1.0), color, fresnelFactor);
+	
 	if(hasEnviroMap && material.isTransparent) {
 		vec4 reflectColor = texture(texture3, reflectionVector),
 			 refractColor = texture(texture3, refractionVector),
-			 enviroColor = mix(reflectColor, refractColor, refractiveFactor);
+			 enviroColor = mix(refractColor, reflectColor, refractiveFactor);
 		color = mix(color, enviroColor, material.transparency);
 	}
+	
+	
 }

@@ -43,7 +43,7 @@ public class ImGuiLayer {
         // Initialize ImGuiIO config
         final ImGuiIO io = ImGui.getIO();
         
-        io.setIniFilename(null); // We don't want to save .ini file but if we do we can simply pass a string as a filename
+        io.setIniFilename("res/fonts/imgui.ini"); // We don't want to save .ini file but if we do we can simply pass a string as a filename
         						 // This is useful for saving the states and position of all ImGui components
         io.addConfigFlags(ImGuiConfigFlags.NavEnableKeyboard);  // Enable Keyboard Controls
         io.addConfigFlags(ImGuiConfigFlags.DockingEnable);      // Enable Docking

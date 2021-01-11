@@ -8,7 +8,6 @@ import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
-import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.system.MemoryStack;
@@ -20,15 +19,13 @@ public class Texture {
 	private int textureID, width, height = 0, depth = 0;
 	private ByteBuffer pixels;
 	
-	public static final int TEXTURE_1D 		 = GL11.GL_TEXTURE_1D,
-							TEXTURE_2D 		 = GL11.GL_TEXTURE_2D,
-							TEXTURE_3D 		 = GL12.GL_TEXTURE_3D,
-							TEXTURE_CUBE_MAP = GL13.GL_TEXTURE_CUBE_MAP;
+	public Texture(final String filePath) { this(filePath, false); }
 	
-	public Texture(String filePath) {
+	public Texture(final String filePath, final boolean flip) {
 		try(MemoryStack stack = MemoryStack.stackPush()) {
 			int[] w = new int[1], h = new int[1], comp = new int[1];
 			
+			STBImage.stbi_set_flip_vertically_on_load(flip);
 			pixels = STBImage.stbi_load(filePath, w, h, comp, 4);
 			if(pixels == null) System.err.println("Couldn't load texture : " + filePath);
 			//System.out.println("The number of components of " + filePath + " texture are " + comp[0]);
@@ -42,7 +39,7 @@ public class Texture {
 	}
 	
 	/***/
-	public Texture(int width, Vector4f color) {
+	public Texture(final int width, final Vector4f color) {
 		color.mul(255);
 		pixels = BufferUtils.createByteBuffer(width * 4);
 		for(int i = 0; i < width; i++) pixels.put((byte)color.x).put((byte)color.y).put((byte)color.z).put((byte)color.w);
@@ -330,5 +327,7 @@ public class Texture {
 	private void setDimensions(int width, int height) { this.width = width; this.height = height; }
 	
 	private void setDimensions(int width, int height, int depth) { this.width = width; this.height = height; this.depth = depth; }
+	
+	public void dispose() { GL11.glDeleteTextures(textureID); }
 	
 }

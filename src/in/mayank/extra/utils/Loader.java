@@ -175,10 +175,13 @@ public class Loader {
 	}
 	
 	public int loadTexture(final String fileName, int anisotropyLevel, final float levelOfDetail) {
-		Integer textureID = textureBuffers.get(fileName);
+		final boolean[] flip = new boolean[1];
+		final String[] filename = new String[] { fileName };
+		decodeTextureFilenames(filename, flip);
+		Integer textureID = textureBuffers.get(filename[0]);
 		if(textureID != null) return textureID;
 		
-		Texture texture = new Texture(fileName);
+		Texture texture = new Texture(filename[0], flip[0]);
 		GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D);
 		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
 		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
@@ -285,6 +288,7 @@ public class Loader {
 		int id = GL11.glGenTextures();
 		GL13.glActiveTexture(GL13.GL_TEXTURE0);
 		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, id);
+		GL30.glGenerateMipmap(GL13.GL_TEXTURE_CUBE_MAP);
 				
 		GL11.glTexSubImage2D(GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, 2 * width, height, 3 * width, 2 * height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);	// Right
 		GL11.glTexSubImage2D(GL13.GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, 0, height, width, 2 * height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);	// Left
@@ -377,7 +381,7 @@ public class Loader {
 		return id;
 	}
 	
-	private ByteBuffer createNoiseBuffer(int width, int height, float xOffset, float yOffset, float xIncrement, float yIncrement) {
+	private ByteBuffer createNoiseBuffer(final int width, final int height, float xOffset, float yOffset, final float xIncrement, final float yIncrement) {
 		ByteBuffer buffer = BufferUtils.createByteBuffer(width * height * 4);
 		
 		xOffset = Maths.max(xOffset, 0);
@@ -398,16 +402,29 @@ public class Loader {
 		return buffer;
 	}
 	
-	private ByteBuffer decodeTextureFiles(String fileName, boolean flip) {
+	/** Decodes the texture files for rendering instructions with the filename.
+	 * Usage : <br /><t /><b>"<Texture file path>;true"</b>
+	 * The instructions supported for now:
+	 * 1. Flipped */ 
+	private void decodeTextureFilenames(final String[] filename, final boolean[] flip) {
+		final String[] tokens = filename[0].split(";");
+		filename[0] = tokens[0];
+		flip[0] = tokens.length > 1 && tokens[1].equalsIgnoreCase("true");
+	}
+	
+	private ByteBuffer decodeTextureFiles(final String fileName, final boolean flip) {
 		ByteBuffer buffer = null;
 		
 		try(MemoryStack stack = MemoryStack.stackPush()){
 			IntBuffer comp = stack.mallocInt(1), w = stack.mallocInt(1),
 					  h = stack.mallocInt(1);
+			final String[] filename = new String[] { fileName };
+			final boolean[] isFlip = new boolean[1];
 			
-			STBImage.stbi_set_flip_vertically_on_load(flip);
-			buffer = STBImage.stbi_load(fileName, w, h, comp, 4);
-			if(buffer == null) System.err.println("Couldn't load texture : "+ fileName);
+			decodeTextureFilenames(filename, isFlip);
+			STBImage.stbi_set_flip_vertically_on_load(isFlip[0]);
+			buffer = STBImage.stbi_load(filename[0], w, h, comp, 4);
+			if(buffer == null) System.err.println("Couldn't load texture : "+ filename);
 			currCubeMapWidth = w.get();
 			currCubeMapHeight = h.get();
 		}

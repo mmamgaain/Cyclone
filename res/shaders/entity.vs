@@ -40,7 +40,7 @@ void main(void){
 	
 	// Environment reflection and refraction calculations
 	// This has to be done before normal mapping calculations as they modify the
-	// vector variables used in these calculations to tangent space and we want them in
+	// vector variables used in these calculations to tangent space and we need them in
 	// world space for these calculations for now.
 	if(hasEnviroMap && isTransparent) {
 		vec3 unitNormal = normalize(surfaceNormal);

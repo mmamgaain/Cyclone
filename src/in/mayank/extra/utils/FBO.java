@@ -15,12 +15,12 @@ import in.mayank.extra.core.Core;
 public class FBO {
 	
 	public static final int COLOR_ATTACHMENT_TEXTURE = 0, DEPTH_ATTACHMENT_TEXTURE = 1,
-							 COLOR_ATTACHMENT_BUFFER  = 2, DEPTH_ATTACHMENT_BUFFER = 3, COLOR_ATTACHMENT_NONE = 4;
-	private static final int MAX_TARGETS = (int) Maths.min(GL11.glGetInteger(GL30.GL_MAX_COLOR_ATTACHMENTS), GL11.glGetInteger(GL20.GL_MAX_DRAW_BUFFERS));
+							COLOR_ATTACHMENT_BUFFER  = 2, DEPTH_ATTACHMENT_BUFFER  = 3, COLOR_ATTACHMENT_NONE = 4;
+	private static int MAX_TARGETS = -1;
 	
-	private int id = 0, depthTexture, depthBuffer;
+	private int id, depthTexture, depthBuffer;
 	private int[] colorTexture = null, colorBuffer = null;
-	private int width, height, samplesPerPixel = 1, maxTarget = 0;
+	private int width, height, samplesPerPixel, maxTarget;
 	private boolean dirty = false;
 	
 	private FBO reserve = null;
@@ -34,9 +34,7 @@ public class FBO {
 	 * 
 	 * @param width The width of the frame buffer.
 	 * @param height The height of the frame buffer. */
-	public FBO(int width, int height) {
-		this(width, height, COLOR_ATTACHMENT_TEXTURE, DEPTH_ATTACHMENT_BUFFER, 1, 0);
-	}
+	public FBO(final int width, final int height) { this(width, height, COLOR_ATTACHMENT_TEXTURE, DEPTH_ATTACHMENT_BUFFER, 1, 0); }
 	
 	/** Creates a multisampled FBO.<br /><br />
 	 * It contains:
@@ -44,11 +42,11 @@ public class FBO {
 	 * <li>Depth Renderbuffer</li>
 	 * <li>Multisampled</li>
 	 * <li>Single render target</li></ol> */
-	public FBO(int width, int height, int samples) {
-		this(width, height, DEPTH_ATTACHMENT_BUFFER, samples, 1);
-	}
+	public FBO(final int width, final int height, final int samples) { this(width, height, DEPTH_ATTACHMENT_BUFFER, samples, 1); }
 	
-	public FBO(int width, int height, int depthAttachmentType, int samples, int maxTargetIndex) {
+	/**  */
+	public FBO(final int width, final int height, final int depthAttachmentType, final int samples, final int maxTargetIndex) {
+		if(MAX_TARGETS == -1) MAX_TARGETS = (int) Maths.min(GL11.glGetInteger(GL30.GL_MAX_COLOR_ATTACHMENTS), GL11.glGetInteger(GL20.GL_MAX_DRAW_BUFFERS));
 		samplesPerPixel = Math.min(1, samples);
 		maxTarget = (int) Maths.clamp(maxTargetIndex, 0, MAX_TARGETS);
 		colorTexture = new int[maxTarget + 1];
@@ -68,7 +66,9 @@ public class FBO {
 		unbindFrameBuffer();
 	}
 	
-	public FBO(int width, int height, int colorAttachmentType, int depthAttachmentType, int samples, int maxTargetIndex) {
+	/**  */
+	public FBO(final int width, final int height, final int colorAttachmentType, final int depthAttachmentType, final int samples, final int maxTargetIndex) {
+		if(MAX_TARGETS == -1) MAX_TARGETS = (int) Maths.min(GL11.glGetInteger(GL30.GL_MAX_COLOR_ATTACHMENTS), GL11.glGetInteger(GL20.GL_MAX_DRAW_BUFFERS));
 		samplesPerPixel = (int) Maths.max(1, samples);
 		maxTarget = (int) Maths.clamp(maxTargetIndex, 0, MAX_TARGETS);
 		colorTexture = new int[maxTarget + 1];
@@ -78,7 +78,7 @@ public class FBO {
 		this.height = height;
 		if(colorAttachmentType == COLOR_ATTACHMENT_NONE) {
 			GL11.glDrawBuffer(GL11.GL_NONE);
-			maxTargetIndex = 0;
+			maxTarget = 0;
 			colorTexture = null;
 		}
 		else if(isMultisampled() || colorAttachmentType == COLOR_ATTACHMENT_BUFFER) {
@@ -96,14 +96,10 @@ public class FBO {
 	private void createFrameBuffer() {
 		id = GL30.glGenFramebuffers();
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, id);
-		attachDrawBuffersTargets();
+		attachDrawBufferTargets();
 	}
 	
-	private void attachDrawBuffersTargets() {
-		int[] totalTargets = new int[maxTarget + 1];
-		for(int i = 0; i <= maxTarget; i++) totalTargets[i] = GL30.GL_COLOR_ATTACHMENT0 + i;
-		GL20.glDrawBuffers(totalTargets);
-	}
+	private void attachDrawBufferTargets() { for(int i = 0; i <= maxTarget; i++) GL20.glDrawBuffers(GL30.GL_COLOR_ATTACHMENT0 + i); }
 	
 	/** Binds this frame buffer, changes the viewport and clears
 	 * the draw buffer for a fresh render. */
@@ -119,7 +115,7 @@ public class FBO {
 		GL11.glViewport(0, 0, Core.getWidth(), Core.getHeight());
 	}
 	
-	private void createColorTextureAttachments(int maxAttachment) {
+	private void createColorTextureAttachments(final int maxAttachment) {
 		for(int i = 0; i <= maxAttachment; i++) {
 			colorTexture[i] = GL11.glGenTextures();
 			GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture[i]);
@@ -140,7 +136,7 @@ public class FBO {
 		GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, GL11.GL_TEXTURE_2D, depthTexture, 0);
 	}
 	
-	private void createColorBufferAttachments(int maxAttachment) {
+	private void createColorBufferAttachments(final int maxAttachment) {
 		for(int i = 0; i <= maxAttachment; i++) {
 			colorBuffer[i] = GL30.glGenRenderbuffers();
 			GL30.glBindRenderbuffer(GL30.GL_RENDERBUFFER, colorBuffer[i]);
@@ -159,7 +155,7 @@ public class FBO {
 	}
 	
 	/***/
-	public void resolveToFBO(FBO fbo) {
+	public void resolveToFBO(final FBO fbo) {
 		if(isMultisampled()) {
 			GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, fbo.id);
 			GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, id);
@@ -209,7 +205,7 @@ public class FBO {
 		return reserve.colorTexture;
 	}
 	
-	private int resolveToTexture(int attachment) {
+	private int resolveToTexture(final int attachment) {
 		GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, reserve.id);
 		GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, id);
 		GL11.glReadBuffer(GL30.GL_COLOR_ATTACHMENT0 + attachment);
@@ -231,7 +227,7 @@ public class FBO {
 		}
 	}
 	
-	public void resolveToScreen(int attachment) {
+	public void resolveToScreen(final int attachment) {
 		if(isMultisampled()) {
 			GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, 0);
 			GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, id);
@@ -246,9 +242,7 @@ public class FBO {
 	/** Returns the color texture of the non-multisampled frame buffer.
 	 * If this frame buffer is multisampled, the texture at index position zero
 	 * (i.e., the first texture position). */
-	public int getColorTexture() {
-		return isMultisampled() ? (dirty ? resolveToTexture(0) : reserve.colorTexture[0]) : colorTexture[0];
-	}
+	public int getColorTexture() { return isMultisampled() ? (dirty ? resolveToTexture(0) : reserve.colorTexture[0]) : colorTexture[0]; }
 	
 	/** Returns the color texture of this frame buffer.
 	 * 
@@ -256,78 +250,46 @@ public class FBO {
 	 * FBO that needs to be returned.
 	 * @throws IndexOutOfBoundsException If the <code>attachment</code> value
 	 * provided is out of the range of accepted values. */
-	public int getColorTexture(int attachment) throws IndexOutOfBoundsException {
+	public int getColorTexture(final int attachment) throws IndexOutOfBoundsException {
 		if(!Maths.inRange(attachment, 0, maxTarget)) throw new IndexOutOfBoundsException("The FBO color attachment index " + attachment + " is out of range.");
 		return isMultisampled() ? (dirty ? resolveToTexture(attachment) : reserve.colorTexture[attachment]) : colorTexture[attachment];
 	}
 	
-	public int[] getAllColorTextures() {
-		return isMultisampled() ? (dirty ? resolveToTextures() : reserve.colorTexture) : colorTexture;
-	}
+	public int[] getAllColorTextures() { return isMultisampled() ? (dirty ? resolveToTextures() : reserve.colorTexture) : colorTexture; }
 	
-	public boolean hasColorTexture() {
-		return colorTexture[0] > 0;
-	}
+	public boolean hasColorTexture() { return colorTexture[0] > 0; }
 	
-	public int getDepthTexture() {
-		return depthTexture;
-	}
+	public int getDepthTexture() { return depthTexture; }
 	
-	public boolean hasDepthTexture() {
-		return depthTexture > 0;
-	}
+	public boolean hasDepthTexture() { return depthTexture > 0; }
 	
-	public int getColorBuffer() {
-		return colorBuffer[0];
-	}
+	public int getColorBuffer() { return colorBuffer[0]; }
 	
-	public int getColorBuffer(int attachment) {
-		return colorBuffer[attachment];
-	}
+	public int getColorBuffer(final int attachment) { return colorBuffer[attachment]; }
 	
-	public boolean hasColorBuffer() {
-		return colorBuffer[0] > 0;
-	}
+	public boolean hasColorBuffer() { return colorBuffer[0] > 0; }
 	
-	public int getDepthBuffer() {
-		return depthBuffer;
-	}
+	public int getDepthBuffer() { return depthBuffer; }
 	
-	public boolean hasDepthBuffer() {
-		return depthBuffer > 0;
-	}
+	public boolean hasDepthBuffer() { return depthBuffer > 0; }
 	
-	public int getWidth() {
-		return width;
-	}
+	public int getWidth() { return width; }
 	
-	public int getHeight() {
-		return height;
-	}
+	public int getHeight() { return height; }
 	
-	public boolean isMultisampled() {
-		return samplesPerPixel > 1;
-	}
+	public boolean isMultisampled() { return samplesPerPixel > 1; }
 	
 	/** Queries the number of samples that this FBO reserves for every pixel that the dimensions
 	 * of this FBO define. A non-multisampled FBO would return a value of 1 (minimum).
 	 * 
 	 * @return The number of samples per pixel. */
-	public int getSamplesPerPixel() {
-		return samplesPerPixel;
-	}
+	public int getSamplesPerPixel() { return samplesPerPixel; }
 	
-	public boolean hasMultipleRenderTargets() {
-		return maxTarget > 0;
-	}
+	public boolean hasMultipleRenderTargets() { return maxTarget > 0; }
 	
-	public int getMaxTargetIndex() {
-		return maxTarget + 1;
-	}
+	public int getMaxTargetIndex() { return maxTarget + 1; }
 	
-	public static int getMaxAvailableTargets() {
-		return MAX_TARGETS;
-	} 
+	public static int getMaxAvailableTargets() { return MAX_TARGETS; }
 	
 	
 	public void dispose() {
