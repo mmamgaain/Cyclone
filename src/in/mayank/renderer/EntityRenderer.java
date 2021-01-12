@@ -42,36 +42,19 @@ public class EntityRenderer extends Renderer {
 		return this;
 	}
 	
-	public float getFogDensity() {
-		return fogDensity;
-	}
+	public float getFogDensity() { return fogDensity; }
 	
-	public float getFogGradient() {
-		return fogGradient;
-	}
+	public float getFogGradient() { return fogGradient; }
 	
-	public float getAmbientLightIntensity() {
-		return ambientLightIntensity;
-	}
+	public float getAmbientLightIntensity() { return ambientLightIntensity; }
 	
-	public EntityRenderer setAmbientLightIntensity(final float ambientLightIntensity) {
-		this.ambientLightIntensity = Maths.clamp(ambientLightIntensity, 0, 1);
-		return this;
-	}
+	public EntityRenderer setAmbientLightIntensity(final float ambientLightIntensity) { this.ambientLightIntensity = Maths.clamp(ambientLightIntensity, 0, 1); return this; }
 	
-	public Light getLight() {
-		return light;
-	}
+	public Light getLight() { return light; }
 	
-	public EntityRenderer setLight(final Light light) {
-		this.light.set(light);
-		return this;
-	}
+	public EntityRenderer setLight(final Light light) { this.light.set(light); return this; }
 	
-	public EntityRenderer setLight(final Vector3f position, final Vector3f color) {
-		light.setPosition(position).setColor(color);
-		return this;
-	}
+	public EntityRenderer setLight(final Vector3f position, final Vector3f color) { light.setPosition(position).setColor(color); return this; }
 	
 	public EntityRenderer increaseLight(final Vector3f position, final Vector3f color) {
 		light.increasePosition(position).increaseColor(color);
@@ -83,19 +66,11 @@ public class EntityRenderer extends Renderer {
 		return this;
 	}
 	
-	public EntityRenderer setStaticEnvironmentMap(final int enviroMap) {
-		staticEnviroMap = enviroMap;
-		return this;
-	}
+	public EntityRenderer setStaticEnvironmentMap(final int enviroMap) { staticEnviroMap = enviroMap; return this; }
 	
-	public EntityRenderer removeStaticEnvironmentMap() {
-		staticEnviroMap = NO_TEXTURE;
-		return this;
-	}
+	public EntityRenderer removeStaticEnvironmentMap() { staticEnviroMap = NO_TEXTURE; return this; }
 	
-	public boolean hasStaticEnvironmentMap() {
-		return staticEnviroMap > NO_TEXTURE;
-	}
+	public boolean hasStaticEnvironmentMap() { return staticEnviroMap > NO_TEXTURE; }
 	
 	protected void prepareRender(final Entity entity, final Matrix4f view) {
 		prepareRender(entity.getModel());
@@ -163,9 +138,7 @@ public class EntityRenderer extends Renderer {
 		shader.stop();
 	}
 	
-	public void dispose() {
-		shader.dispose();
-	}
+	public void dispose() { shader.dispose(); }
 	
 }
 
@@ -178,9 +151,7 @@ class EntityShader extends Shader {
 		remapTextureSamplerName(2, "material.specularMap");
 	}
 	
-	void loadClipPlane(final Vector4f clipPlane) {
-		loadUniform("clipPlane", clipPlane);
-	}
+	void loadClipPlane(final Vector4f clipPlane) { loadUniform("clipPlane", clipPlane); }
 	
 	void loadMaterial(final Material material) {
 		loadUniform("material.hasDiffuseTexture", material.hasDiffuseTexture());
@@ -201,18 +172,11 @@ class EntityShader extends Shader {
 		loadUniform("material.fresnelPower", material.getFresnelPower());
 	}
 	
-	void loadSkyColor(final float red, final float green, final float blue) {
-		loadUniform("skyColor", red, green, blue);
-	}
+	void loadSkyColor(final float red, final float green, final float blue) { loadUniform("skyColor", red, green, blue); }
 	
-	void loadFogVariables(final float density, final float gradient) {
-		loadUniform("fogDensity", density);
-		loadUniform("fogGradient", gradient);
-	}
+	void loadFogVariables(final float density, final float gradient) { loadUniform("fogDensity", density); loadUniform("fogGradient", gradient); }
 	
-	void loadTextureAtlasOffset(final Vector2f offset) {
-		loadUniform("offset", offset);
-	}
+	void loadTextureAtlasOffset(final Vector2f offset) { loadUniform("offset", offset); }
 	
 	void loadLight(final Light light, final Matrix4f view, final boolean inEyeSpace) {
 		loadUniform("lightPos", light.getPosition());
@@ -227,12 +191,8 @@ class EntityShader extends Shader {
 		return new Vector3f(eyeSpacePos.x, eyeSpacePos.y, eyeSpacePos.z);
 	}
 	
-	void loadAmbientLightIntensity(final float ambient) {
-		loadUniform("ambientLightIntensity", ambient);
-	}
+	void loadAmbientLightIntensity(final float ambient) { loadUniform("ambientLightIntensity", ambient); }
 	
-	void loadHasEnviroMap(final boolean enviroMap) {
-		loadUniform("hasEnviroMap", enviroMap);
-	}
+	void loadHasEnviroMap(final boolean enviroMap) { loadUniform("hasEnviroMap", enviroMap); }
 	
 }

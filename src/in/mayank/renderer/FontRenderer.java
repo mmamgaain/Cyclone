@@ -14,20 +14,18 @@ import in.mayank.shader.ShaderProgram;
 
 public class FontRenderer {
 
-	private FontShader shader;
+	private final FontShader shader;
 	
-	public FontRenderer(String vertexFile, String fragmentFile) {
-		shader = new FontShader(vertexFile, fragmentFile);
-	}
+	public FontRenderer(final String vertexFile, final String fragmentFile) { shader = new FontShader(vertexFile, fragmentFile); }
 	
-	private void prepare(){
+	private void prepare() {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		shader.start();
 	}
 	
-	private void renderText(GUIText text){
+	private void renderText(final GUIText text) {
 		GL30.glBindVertexArray(text.getMesh());
 		GL20.glEnableVertexAttribArray(0);
 		GL20.glEnableVertexAttribArray(1);
@@ -38,7 +36,7 @@ public class FontRenderer {
 		GL30.glBindVertexArray(0);
 	}
 	
-	public void render(Map<FontType, List<GUIText>> texts){
+	public void render(final Map<FontType, List<GUIText>> texts) {
 		prepare();
 		for(FontType font : texts.keySet()){
 			GL13.glActiveTexture(GL13.GL_TEXTURE0);
@@ -48,29 +46,25 @@ public class FontRenderer {
 		endRendering();
 	}
 	
-	public void clear(GUIText text) {
+	public void clear(final GUIText text) {
 		
 	}
 	
-	private void endRendering(){
+	private void endRendering() {
 		shader.stop();
 		GL11.glDisable(GL11.GL_BLEND);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 	}
 	
-	public void dispose(){
-		shader.dispose();
-	}
+	public void dispose() { shader.dispose(); }
 
 }
 
 class FontShader extends ShaderProgram {
 
-	public FontShader(String vertexFile, String fragmentFile) {
-		super(vertexFile, fragmentFile);
-	}
+	public FontShader(final String vertexFile, final String fragmentFile) { super(vertexFile, fragmentFile); }
 	
-	void loadText(GUIText text) {
+	void loadText(final GUIText text) {
 		loadUniform("color", text.getColour());
 		loadUniform("outlineColor", text.getOutlineColor());
 		loadUniform("charWidth", text.getCharWidth());

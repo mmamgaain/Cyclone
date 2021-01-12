@@ -8,20 +8,18 @@ import in.mayank.shader.Shader;
 
 public class TexturedRenderer extends Renderer {
 	
-	private Shader shader;
+	private final Shader shader;
 	
-	public TexturedRenderer(String vertexFile, String fragmentFile) {
-		this(vertexFile, fragmentFile, PLACEHOLDER_MATRIX);
-	}
+	public TexturedRenderer(String vertexFile, String fragmentFile) { this(vertexFile, fragmentFile, PLACEHOLDER_MATRIX); }
 	
-	public TexturedRenderer(String vertexFile, String fragmentFile, Matrix4f projectionMatrix) {
+	public TexturedRenderer(final String vertexFile, final String fragmentFile, final Matrix4f projectionMatrix) {
 		shader = new Shader(vertexFile, fragmentFile);
 		shader.start();
 		shader.loadProjectionMatrix(projectionMatrix);
 		shader.stop();
 	}
 	
-	protected void prepareRender(TexturedModel model, Matrix4f transform, Matrix4f view) {
+	protected void prepareRender(final TexturedModel model, final Matrix4f transform, final Matrix4f view) {
 		prepareRender(model);
 		loadTexture2D(0, model.getTexture());
 		shader.loadModelMatrix(transform);
@@ -29,11 +27,9 @@ public class TexturedRenderer extends Renderer {
 		shader.loadTime((float)Core.getElapsedTimeInSeconds());
 	}
 	
-	public void render(TexturedModel model) {
-		render(model, PLACEHOLDER_MATRIX, PLACEHOLDER_MATRIX);
-	}
+	public void render(final TexturedModel model) { render(model, PLACEHOLDER_MATRIX, PLACEHOLDER_MATRIX); }
 	
-	public void render(TexturedModel model, Matrix4f transform, Matrix4f view) {
+	public void render(final TexturedModel model, final Matrix4f transform, final Matrix4f view) {
 		shader.start();
 		prepareRender(model, transform, view);
 		drawTriangleCall(model.getModel());
@@ -41,17 +37,13 @@ public class TexturedRenderer extends Renderer {
 		shader.stop();
 	}
 	
-	public TexturedRenderer loadProjectionMatrix(Matrix4f projection) {
+	public TexturedRenderer loadProjectionMatrix(final Matrix4f projection) {
 		shader.start();
 		shader.loadProjectionMatrix(projection);
 		shader.stop();
 		return this;
 	}
 	
-	public void dispose() {
-		shader.dispose();
-	}
-	
-	
+	public void dispose() { shader.dispose(); }
 	
 }

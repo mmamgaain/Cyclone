@@ -25,7 +25,7 @@ import org.lwjgl.opengl.GL43;
  * all the prerequisites to create an OpenGL shader. */
 public abstract class ShaderProgram {
 	
-	private int id;
+	private final int id;
 	private final boolean usesGeometryShader;
 	private static List<String> attributeList = new ArrayList<>();
 	/** {@value #MAX_TEXTURE_UNITS} */
@@ -54,9 +54,9 @@ public abstract class ShaderProgram {
 	 * 
 	 * @param vertexFile The path for the vertex shader file.
 	 * @param fragmentFile The path for the fragment shader file. */
-	public ShaderProgram(String vertexFile, String fragmentFile) {
-		int vertexShaderID = loadShader(vertexFile, GL20.GL_VERTEX_SHADER),
-			fragmentShaderID = loadShader(fragmentFile, GL20.GL_FRAGMENT_SHADER);
+	public ShaderProgram(final String vertexFile, final String fragmentFile) {
+		final int vertexShaderID = loadShader(vertexFile, GL20.GL_VERTEX_SHADER),
+				  fragmentShaderID = loadShader(fragmentFile, GL20.GL_FRAGMENT_SHADER);
 		id = GL20.glCreateProgram();
 		GL20.glAttachShader(id, vertexShaderID);
 		GL20.glAttachShader(id, fragmentShaderID);
@@ -85,9 +85,9 @@ public abstract class ShaderProgram {
 	 * @param geometryFile The path of the geometry shader file.
 	 * @param fragmentFile The path for the fragment shader file. */
 	public ShaderProgram(String vertexFile, String geometryFile, String fragmentFile) {
-		int vertexShaderID = loadShader(vertexFile, GL20.GL_VERTEX_SHADER),
-			geometryShaderID = loadShader(geometryFile, GL32.GL_GEOMETRY_SHADER),
-			fragmentShaderID = loadShader(fragmentFile, GL20.GL_FRAGMENT_SHADER);
+		final int vertexShaderID = loadShader(vertexFile, GL20.GL_VERTEX_SHADER),
+				  geometryShaderID = loadShader(geometryFile, GL32.GL_GEOMETRY_SHADER),
+				  fragmentShaderID = loadShader(fragmentFile, GL20.GL_FRAGMENT_SHADER);
 		id = GL20.glCreateProgram();
 		GL20.glAttachShader(id, vertexShaderID);
 		GL20.glAttachShader(id, geometryShaderID);
@@ -116,21 +116,14 @@ public abstract class ShaderProgram {
 	 * draw calls. This shader pipeline will be used till any other
 	 * shader's start method is called or the {@link #stop()} method
 	 * is called. */
-	public void start() {
-		GL20.glUseProgram(id);
-		bindAllTextureUnits();
-	}
+	public void start() { GL20.glUseProgram(id); bindAllTextureUnits(); }
 	
 	/** Stops this shader from being used. */
-	public void stop() {
-		GL20.glUseProgram(0);
-	}
+	public void stop() { GL20.glUseProgram(0); }
 	
 	/** @return True if this shader pipeline uses the geometry shader,
 	 * false if not. */
-	public boolean usesGeometryShader() {
-		return usesGeometryShader;
-	}
+	public boolean usesGeometryShader() { return usesGeometryShader; }
 	
 	/** Gets the location of the uniform variable used in the
 	 * shader source code.
@@ -142,11 +135,9 @@ public abstract class ShaderProgram {
 	 * @return The ID location of this uniform variable from the attached
 	 * shaders as an <code>int</code>, or -1 if no such active uniform
 	 * variable exists. */
-	protected int getUniformLocation(String name) {
-		return getUniformLocation(name, true);
-	}
+	protected int getUniformLocation(final String name) { return getUniformLocation(name, true); }
 	
-	private int getUniformLocation(String name, boolean store) {
+	private int getUniformLocation(final String name, final boolean store) {
 		Integer loc = uniformLocations.get(name);
 		if(loc != null) return loc;
 		loc = GL20.glGetUniformLocation(id, name);
@@ -172,11 +163,8 @@ public abstract class ShaderProgram {
 	 * @return A signal for if the task was successfully performed or not.
 	 * The reason for the failure for this method could be the location being
 	 * out of the range of [0 to {@link #MAX_TEXTURE_UNITS}] */
-	protected boolean remapTextureSamplerName(int location, String name) {
-		if(location >= 0 && location < MAX_TEXTURE_UNITS) {
-			location_textureUnits[location] = getUniformLocation(name, false);
-			return true;
-		}
+	protected boolean remapTextureSamplerName(final int location, final String name) {
+		if(location >= 0 && location < MAX_TEXTURE_UNITS) { location_textureUnits[location] = getUniformLocation(name, false); return true; }
 		return false;
 	}
 	
@@ -184,33 +172,25 @@ public abstract class ShaderProgram {
 	 * 
 	 * @param name The name of the uniform variable.
 	 * @param value The value to be loaded. */
-	protected void loadUniform(String name, float value) {
-		GL20.glUniform1f(getUniformLocation(name), value);
-	}
+	protected void loadUniform(final String name, final float value) { GL20.glUniform1f(getUniformLocation(name), value); }
 	
 	/** Loads an <code>int</code> to the uniform variable.
 	 * 
 	 * @param name The name of the uniform variable.
 	 * @param value The value to be loaded. */
-	protected void loadUniform(String name, int value) {
-		GL20.glUniform1i(getUniformLocation(name), value);
-	}
+	protected void loadUniform(final String name, final int value) { GL20.glUniform1i(getUniformLocation(name), value); }
 	
 	/** Loads a <code>boolean</code> value to the shader.
 	 * 
 	 * @param name The name of the uniform variable.
 	 * @param value The value to be loaded. */
-	protected void loadUniform(String name, boolean value) {
-		GL20.glUniform1i(getUniformLocation(name), value ? 1 : 0);
-	}
+	protected void loadUniform(final String name, final boolean value) { GL20.glUniform1i(getUniformLocation(name), value ? 1 : 0); }
 	
 	/** Loads a 3D Vector to the uniform variable.
 	 * 
 	 * @param name The name of the uniform variable.
 	 * @param v The Vector to be loaded. */
-	protected void loadUniform(String name, Vector3f v) {
-		GL20.glUniform3f(getUniformLocation(name), v.x, v.y, v.z);
-	}
+	protected void loadUniform(final String name, final Vector3f v) { GL20.glUniform3f(getUniformLocation(name), v.x, v.y, v.z); }
 	
 	/** Loads a 3D Vector to the uniform variable.
 	 * 
@@ -218,51 +198,39 @@ public abstract class ShaderProgram {
 	 * @param x The X-axis of the Vector to be loaded.
 	 * @param y The Y-axis of the Vector to be loaded.
 	 * @param z The Z-axis of the Vector to be loaded. */
-	protected void loadUniform(String name, float x, float y, float z) {
-		GL20.glUniform3f(getUniformLocation(name), x, y, z);
-	}
+	protected void loadUniform(final String name, final float x, final float y, final float z) { GL20.glUniform3f(getUniformLocation(name), x, y, z); }
 	
 	/** Loads a 2D Vector to the uniform variable.
 	 * 
 	 * @param name The name of the uniform variable.
 	 * @param v The Vector to be loaded. */
-	protected void loadUniform(String name, Vector2f v) {
-		GL20.glUniform2f(getUniformLocation(name), v.x, v.y);
-	}
+	protected void loadUniform(final String name, final Vector2f v) { GL20.glUniform2f(getUniformLocation(name), v.x, v.y); }
 	
 	/** Loads a 2D Vector to the uniform variable.
 	 * 
 	 * @param name The name of the uniform variable.
 	 * @param x The X-axis of the Vector to be loaded.
 	 * @param y The Y-axis of the Vector to be loaded. */
-	protected void loadUniform(String name, float x, float y) {
-		GL20.glUniform2f(getUniformLocation(name), x, y);
-	}
+	protected void loadUniform(final String name, final float x, final float y) { GL20.glUniform2f(getUniformLocation(name), x, y); }
 	
 	/** Loads a 2D integer Vector to the uniform variable.
 	 * 
 	 * @param name The name of the uniform variable.
 	 * @param v The Vector to be loaded. */
-	protected void loadUniform(String name, Vector2i v) {
-		GL20.glUniform2i(getUniformLocation(name), v.x, v.y);
-	}
+	protected void loadUniform(final String name, final Vector2i v) { GL20.glUniform2i(getUniformLocation(name), v.x, v.y); }
 	
 	/** Loads a 2D integer Vector to the uniform variable.
 	 * 
 	 * @param name The name of the uniform variable.
 	 * @param x The X-axis of the Vector to be loaded.
 	 * @param y The Y-axis of the Vector to be loaded. */
-	protected void loadUniform(String name, int x, int y) {
-		GL20.glUniform2i(getUniformLocation(name), x, y);
-	}
+	protected void loadUniform(final String name, final int x, final int y) { GL20.glUniform2i(getUniformLocation(name), x, y); }
 	
 	/** Loads a 4D Vector to the uniform variable.
 	 * 
 	 * @param name The name of the uniform variable.
 	 * @param v The Vector to be loaded. */
-	protected void loadUniform(String name, Vector4f v) {
-		GL20.glUniform4f(getUniformLocation(name), v.x, v.y, v.z, v.w);
-	}
+	protected void loadUniform(final String name, final Vector4f v) { GL20.glUniform4f(getUniformLocation(name), v.x, v.y, v.z, v.w); }
 	
 	/** Loads a 4D Vector to the uniform variable.
 	 * 
@@ -271,41 +239,31 @@ public abstract class ShaderProgram {
 	 * @param y The Y-axis of the Vector to be loaded.
 	 * @param z The Z-axis of the Vector to be loaded.
 	 * @param w The W-axis of the Vector to be loaded. */
-	protected void loadUniform(String name, float x, float y, float z, float w) {
-		GL20.glUniform4f(getUniformLocation(name), x, y, z, w);
-	}
+	protected void loadUniform(final String name, final float x, final float y, final float z, final float w) { GL20.glUniform4f(getUniformLocation(name), x, y, z, w); }
 	
 	/** Loads a 4D Matrix to the uniform variable.
 	 * 
 	 * @param name The name of the uniform variable.
 	 * @param matrix The Matrix to be loaded. */
-	protected void loadUniform(String name, Matrix4f matrix) {
-		GL20.glUniformMatrix4fv(getUniformLocation(name), false, matrix.get(matrix4));
-	}
+	protected void loadUniform(final String name, final Matrix4f matrix) { GL20.glUniformMatrix4fv(getUniformLocation(name), false, matrix.get(matrix4)); }
 	
 	/** Loads a transposed 4D Matrix to the uniform variable.
 	 * 
 	 * @param name The name of the uniform variable.
 	 * @param matrix The Matrix to be loaded. */
-	protected void loadUniformTransposed(String name, Matrix4f matrix) {
-		GL20.glUniformMatrix4fv(getUniformLocation(name), true, matrix.get(matrix4));
-	}
+	protected void loadUniformTransposed(final String name, final Matrix4f matrix) { GL20.glUniformMatrix4fv(getUniformLocation(name), true, matrix.get(matrix4)); }
 	
 	/** Loads a 3D Matrix to the uniform variable.
 	 * 
 	 * @param name The name of the uniform variable.
 	 * @param matrix The Matrix to be loaded. */
-	protected void loadUniform(String name, Matrix3f matrix) {
-		GL20.glUniformMatrix3fv(getUniformLocation(name), false, matrix.get(matrix3));
-	}
+	protected void loadUniform(final String name, final Matrix3f matrix) { GL20.glUniformMatrix3fv(getUniformLocation(name), false, matrix.get(matrix3)); }
 	
 	/** Loads a transposed 3D Matrix to the uniform variable.
 	 * 
 	 * @param name The name of the uniform variable.
 	 * @param matrix The Matrix to be loaded. */
-	protected void loadUniformTransposed(String name, Matrix3f matrix) {
-		GL20.glUniformMatrix3fv(getUniformLocation(name), true, matrix.get(matrix3));
-	}
+	protected void loadUniformTransposed(final String name, final Matrix3f matrix) { GL20.glUniformMatrix3fv(getUniformLocation(name), true, matrix.get(matrix3)); }
 	
 	/** Binds a particular VBO from the VAO that is currently bound.
 	 * 
@@ -314,9 +272,7 @@ public abstract class ShaderProgram {
 	 * @param variableName The String name of the variable in the
 	 * shader (vertex shader) with which the VBO needs to be
 	 * bound. */
-	protected void bindAttribute(int attribute, String variableName) {
-		GL20.glBindAttribLocation(id, attribute, variableName);
-	}
+	protected void bindAttribute(final int attribute, final String variableName) { GL20.glBindAttribLocation(id, attribute, variableName); }
 	
 	/* Binds all of the texture slots used in the shader files to the corresponding
 	 * texture bank so that it can read from the correct texture input. It is assumed
@@ -335,7 +291,7 @@ public abstract class ShaderProgram {
 	 * @param type The type of shader.
 	 * 
 	 * @return The ID of the shader created. */
-	private static int loadShader(String source, int type) {
+	private static int loadShader(final String source, final int type) {
 		StringBuilder shaderSource = new StringBuilder();
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(source));
@@ -369,7 +325,7 @@ public abstract class ShaderProgram {
 	 * @param line The single line being read from the vertex shader which contains
 	 * the input declaration. This is sent by this function's invocation by the
 	 * {@link #loadShader(String, int)} function. */
-	private static void collectAttributes(String line) {
+	private static void collectAttributes(final String line) {
 		String[] words = line.split(" ");
 		String attrib = words[words.length - 1];
 		// Assuming that one line of the input only contains one declaration
@@ -398,12 +354,6 @@ public abstract class ShaderProgram {
 	}
 	
 	/** Deletes the shader resources from the GPU. */
-	public void dispose() {
-		stop();
-		uniformLocations.clear();
-		matrix3.clear();
-		matrix4.clear();
-		GL20.glDeleteProgram(id);
-	}
+	public void dispose() { stop(); uniformLocations.clear(); matrix3.clear(); matrix4.clear(); GL20.glDeleteProgram(id); }
 	
 }

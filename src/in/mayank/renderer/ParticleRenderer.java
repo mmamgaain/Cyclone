@@ -13,11 +13,11 @@ import in.mayank.shader.Shader;
 
 public class ParticleRenderer extends Renderer {
 	
-	private RawModel quad;
+	private final RawModel quad;
 	
-	private ParticleShader shader;
+	private final ParticleShader shader;
 	
-	public ParticleRenderer(String vertexFile, String fragmentFile, Loader loader, Matrix4f projectionMatrix) {
+	public ParticleRenderer(final String vertexFile, final String fragmentFile, final Loader loader, final Matrix4f projectionMatrix) {
 		shader = new ParticleShader(vertexFile, fragmentFile);
 		quad = loader.loadToVAO(new float[]{ -0.5F, 0.5F, -0.5F, -0.5F, 0.5F, 0.5F, 0.5F, -0.5F }, 2);
 		shader.start();
@@ -32,7 +32,7 @@ public class ParticleRenderer extends Renderer {
 		GL11.glDepthMask(false);
 	}
 	
-	private Matrix4f getModelViewMatrix(Vector3f position, Vector3f scale, float rotation, Matrix4f view) {
+	private Matrix4f getModelViewMatrix(final Vector3f position, final Vector3f scale, final float rotation, final Matrix4f view) {
 		Matrix4f model = new Matrix4f();
 		model.translate(position);
 		
@@ -45,10 +45,10 @@ public class ParticleRenderer extends Renderer {
 		return view.mul(model, model);
 	}
 	
-	public void render(List<Particle> particles, Matrix4f view) {
+	public void render(final List<Particle> particles, final Matrix4f view) {
 		shader.start();
 		prepare();
-		for(Particle particle : particles) {
+		for(final Particle particle : particles) {
 			shader.loadModelViewMatrix(getModelViewMatrix(particle.getPosition(), particle.getScale(), particle.getRotation(), view));
 			shader.loadColor(particle.getColor());
 			drawTriangleCall(quad);
@@ -57,10 +57,7 @@ public class ParticleRenderer extends Renderer {
 		shader.stop();
 	}
 	
-	private void finish() {
-		finishRender(quad);
-		GL11.glDepthMask(true);
-	}
+	private void finish() { finishRender(quad); GL11.glDepthMask(true); }
 	
 	public void dispose() { shader.dispose(); }
 	
@@ -68,12 +65,10 @@ public class ParticleRenderer extends Renderer {
 
 class ParticleShader extends Shader {
 
-	public ParticleShader(String vertexFile, String fragmentFile) {
-		super(vertexFile, fragmentFile);
-	}
+	public ParticleShader(final String vertexFile, final String fragmentFile) { super(vertexFile, fragmentFile); }
 	
-	void loadModelViewMatrix(Matrix4f modelView) { loadUniform("modelView", modelView); }
+	void loadModelViewMatrix(final Matrix4f modelView) { loadUniform("modelView", modelView); }
 	
-	void loadColor(Vector3f color) { loadUniform("color", color); }
+	void loadColor(final Vector3f color) { loadUniform("color", color); }
 	
 }

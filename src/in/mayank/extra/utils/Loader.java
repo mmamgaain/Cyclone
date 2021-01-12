@@ -174,6 +174,10 @@ public class Loader {
 		return loadTexture(fileName, 0, 0);
 	}
 	
+	public int loadTexture(final String fileName, final int anisotropyLevel) {
+		return loadTexture(fileName, anisotropyLevel, 0);
+	}
+	
 	public int loadTexture(final String fileName, int anisotropyLevel, final float levelOfDetail) {
 		final boolean[] flip = new boolean[1];
 		final String[] filename = new String[] { fileName };
@@ -182,11 +186,11 @@ public class Loader {
 		if(textureID != null) return textureID;
 		
 		Texture texture = new Texture(filename[0], flip[0]);
-		GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D);
 		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
 		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_REPEAT);
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_REPEAT);
+		GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D);
 		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL14.GL_TEXTURE_LOD_BIAS, levelOfDetail);
 		if(GL.getCapabilities().GL_EXT_texture_filter_anisotropic) {
 			if(anisotropyLevel > 0) {
@@ -194,10 +198,7 @@ public class Loader {
 				GL11.glTexParameteri(GL11.GL_TEXTURE_2D, EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropyLevel);
 			}
 		}
-		else {
-			GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL14.GL_TEXTURE_LOD_BIAS, -0.4F);
-			System.out.println("Anisotropic filtering not supported.");
-		}
+		else { System.out.println("Anisotropic filtering not supported."); }
 		
 		textureID = texture.getID();
 		textures.add(textureID);
@@ -268,10 +269,11 @@ public class Loader {
 		return texture;
 	}
 	
-	/***/
+	public int loadTextureCubeMap(final String filename) { return loadTextureCubeMap(filename, 0); }
 	
+	/***/
 	// TODO: Correct Implementation
-	public int loadTextureCubeMap(final String filename) {
+	public int loadTextureCubeMap(final String filename, final float levelOfDetail) {
 		ByteBuffer buffer = null;
 		int width, height;
 		
@@ -288,7 +290,6 @@ public class Loader {
 		int id = GL11.glGenTextures();
 		GL13.glActiveTexture(GL13.GL_TEXTURE0);
 		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, id);
-		GL30.glGenerateMipmap(GL13.GL_TEXTURE_CUBE_MAP);
 				
 		GL11.glTexSubImage2D(GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, 2 * width, height, 3 * width, 2 * height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);	// Right
 		GL11.glTexSubImage2D(GL13.GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, 0, height, width, 2 * height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);	// Left
@@ -298,17 +299,22 @@ public class Loader {
 		GL11.glTexSubImage2D(GL13.GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, width, height, 2 * width, 2 * height, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);	// Front
 			
 			
-		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
 		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
 		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
-			
+		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL12.GL_TEXTURE_WRAP_R, GL12.GL_CLAMP_TO_EDGE);
+		GL30.glGenerateMipmap(GL13.GL_TEXTURE_CUBE_MAP);
+		GL11.glTexParameterf(GL13.GL_TEXTURE_CUBE_MAP, GL14.GL_TEXTURE_LOD_BIAS, levelOfDetail);
+		
 		textures.add(id);
 		return 0;
 	}
+	
+	public int loadTextureCubeMap(final String[] textureFiles) { return loadTextureCubeMap(textureFiles, 0); }
 		
 	/***/
-	public int loadTextureCubeMap(final String[] textureFiles) {
+	public int loadTextureCubeMap(final String[] textureFiles, final float levelOfDetail) {
 		int id = GL11.glGenTextures();
 		GL13.glActiveTexture(GL13.GL_TEXTURE0);
 		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, id);
@@ -319,10 +325,13 @@ public class Loader {
 			ByteBuffer data = decodeTextureFiles(textureFiles[i], false);
 			GL11.glTexImage2D(GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL11.GL_RGBA, currCubeMapWidth, currCubeMapHeight, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, data);
 		}
-		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
 		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
 		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL12.GL_TEXTURE_WRAP_R, GL12.GL_CLAMP_TO_EDGE);
+		GL30.glGenerateMipmap(GL13.GL_TEXTURE_CUBE_MAP);
+		GL11.glTexParameterf(GL13.GL_TEXTURE_CUBE_MAP, GL14.GL_TEXTURE_LOD_BIAS, levelOfDetail);
 		textures.add(id);
 		
 		return id;
@@ -351,27 +360,6 @@ public class Loader {
 		data = createNoiseBuffer(width, height, xDist, 0, xIncrement, yIncrement);
 		GL11.glTexImage2D(GL13.GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL11.GL_RGBA, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, data);
 		
-		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
-		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
-		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
-		textures.add(id);
-				
-		return id;
-	}
-	
-	/***/
-	public int loadTextureCubeMap(final String[] textureFiles, final boolean[] flip) {
-		int id = GL11.glGenTextures();
-		GL13.glActiveTexture(GL13.GL_TEXTURE0);
-		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, id);
-			
-		for(int i = 0; i < textureFiles.length; i++) {
-			// decodeTextureFiles method has to be run before the glTexImage2D function as
-			// it instantiates the currCubeMapWidth and the currCubeMapHeight variables
-			ByteBuffer data = decodeTextureFiles(textureFiles[i], flip[i]);
-			GL11.glTexImage2D(GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL11.GL_RGBA, currCubeMapWidth, currCubeMapHeight, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, data);
-		}
 		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
 		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
 		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);

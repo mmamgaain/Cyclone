@@ -17,11 +17,11 @@ import in.mayank.shader.Shader;
 
 public class WaterRenderer extends Renderer {
 	
-	private RawModel quad;
-	private WaterShader shader;
-	private WaterFBO fbo;
+	private final RawModel quad;
+	private final WaterShader shader;
+	private final WaterFBO fbo;
 	
-	public WaterRenderer(String vertexFile, String fragmentFile, WaterFBO fbo, Matrix4f projection, Loader loader) {
+	public WaterRenderer(final String vertexFile, final String fragmentFile, final WaterFBO fbo, final Matrix4f projection, final Loader loader) {
 		quad = loader.loadToVAO(new float[] {-1, -1, -1, 1, 1, -1, 1, 1}, 2);
 		shader = new WaterShader(vertexFile, fragmentFile);
 		this.fbo = fbo;
@@ -30,7 +30,7 @@ public class WaterRenderer extends Renderer {
 		shader.stop();
 	}
 	
-	protected void prepareRender(RawModel model, Vector3f cameraPos, Light light, Matrix4f view) {
+	protected void prepareRender(final RawModel model, final Vector3f cameraPos, final Light light, final Matrix4f view) {
 		super.prepareRender(model);
 		shader.loadCameraPosition(cameraPos);
 		shader.loadLight(light);
@@ -45,17 +45,17 @@ public class WaterRenderer extends Renderer {
 		}
 	}
 	
-	private void prepareInstance(WaterTile tile) {
+	private void prepareInstance(final WaterTile tile) {
 		if(tile.hasDistortionMap()) loadTexture2D(3, tile.getDistortionMap());
 		if(tile.hasNormalMap()) loadTexture2D(4, tile.getNormalMap());
 		shader.loadMaterial(tile);
 		shader.loadModelMatrix(Maths.createTransformationMatrix(new Vector3f(tile.getX(), tile.getHeight(), tile.getZ()), new Vector3f(0), new Vector3f(tile.getSizeX(), 0, tile.getSizeZ())));
 	}
 	
-	public void render(List<WaterTile> tiles, Matrix4f view, Light light, Vector3f cameraPos) {
+	public void render(final List<WaterTile> tiles, final Matrix4f view, final Light light, final Vector3f cameraPos) {
 		shader.start();
 		prepareRender(quad, cameraPos, light, view);
-		for(WaterTile tile : tiles) {
+		for(final WaterTile tile : tiles) {
 			prepareInstance(tile.update());
 			drawTriangleCall(quad);
 		}
@@ -63,16 +63,13 @@ public class WaterRenderer extends Renderer {
 		shader.stop();
 	}
 	
-	public void dispose() {
-		shader.dispose();
-		fbo.dispose();
-	}
+	public void dispose() { shader.dispose(); fbo.dispose(); }
 	
 }
 
 class WaterShader extends Shader {
 	
-	public WaterShader(String vertexFile, String fragmentFile) {
+	public WaterShader(final String vertexFile, final String fragmentFile) {
 		super(vertexFile, fragmentFile);
 		remapTextureSamplerName(0, "material.reflectionTexture");
 		remapTextureSamplerName(1, "material.refractionTexture");
@@ -81,7 +78,7 @@ class WaterShader extends Shader {
 		remapTextureSamplerName(4, "material.normalMap");
 	}
 	
-	void loadMaterial(WaterTile tile) {
+	void loadMaterial(final WaterTile tile) {
 		loadUniform("material.waterColor", tile.getWaterColor());
 		loadUniform("material.maxDepth", tile.getMaxDistance());
 		loadUniform("material.shineDamper", tile.getShineDamper());
@@ -95,18 +92,10 @@ class WaterShader extends Shader {
 		loadUniform("material.chaos", tile.getDistortionChaos());
 	}
 	
-	void loadNearFarValues(float near, float far) {
-		loadUniform("near", near);
-		loadUniform("far", far);
-	}
+	void loadNearFarValues(final float near, final float far) { loadUniform("near", near); loadUniform("far", far); }
 	
-	void loadLight(Light light) {
-		loadUniform("lightPos", light.getPosition());
-		loadUniform("lightColor", light.getColor());
-	}
+	void loadLight(final Light light) { loadUniform("lightPos", light.getPosition()); loadUniform("lightColor", light.getColor()); }
 	
-	void loadCameraPosition(Vector3f pos) {
-		loadUniform("cameraPos", pos);
-	}
+	void loadCameraPosition(final Vector3f pos) { loadUniform("cameraPos", pos); }
 	
 }

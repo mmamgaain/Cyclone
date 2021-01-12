@@ -14,12 +14,12 @@ import in.mayank.extra.core.Core;
 
 public class FBO {
 	
-	public static final int COLOR_ATTACHMENT_TEXTURE = 0, DEPTH_ATTACHMENT_TEXTURE = 1,
-							COLOR_ATTACHMENT_BUFFER  = 2, DEPTH_ATTACHMENT_BUFFER  = 3, COLOR_ATTACHMENT_NONE = 4;
+	public static final int COLOR_ATTACHMENT_TEXTURE = 0, DEPTH_ATTACHMENT_TEXTURE = 1, COLOR_ATTACHMENT_BUFFER = 2,
+							DEPTH_ATTACHMENT_BUFFER  = 3, COLOR_ATTACHMENT_NONE    = 4;
 	private static int MAX_TARGETS = -1;
 	
 	private int id, depthTexture, depthBuffer;
-	private int[] colorTexture = null, colorBuffer = null;
+	private final int[] colorTexture, colorBuffer;
 	private int width, height, samplesPerPixel, maxTarget;
 	private boolean dirty = false;
 	
@@ -46,7 +46,7 @@ public class FBO {
 	
 	/**  */
 	public FBO(final int width, final int height, final int depthAttachmentType, final int samples, final int maxTargetIndex) {
-		if(MAX_TARGETS == -1) MAX_TARGETS = (int) Maths.min(GL11.glGetInteger(GL30.GL_MAX_COLOR_ATTACHMENTS), GL11.glGetInteger(GL20.GL_MAX_DRAW_BUFFERS));
+		if(MAX_TARGETS == -1) MAX_TARGETS = Math.min(GL11.glGetInteger(GL30.GL_MAX_COLOR_ATTACHMENTS), GL11.glGetInteger(GL20.GL_MAX_DRAW_BUFFERS));
 		samplesPerPixel = Math.min(1, samples);
 		maxTarget = (int) Maths.clamp(maxTargetIndex, 0, MAX_TARGETS);
 		colorTexture = new int[maxTarget + 1];
@@ -76,11 +76,7 @@ public class FBO {
 		createFrameBuffer();
 		this.width = width;
 		this.height = height;
-		if(colorAttachmentType == COLOR_ATTACHMENT_NONE) {
-			GL11.glDrawBuffer(GL11.GL_NONE);
-			maxTarget = 0;
-			colorTexture = null;
-		}
+		if(colorAttachmentType == COLOR_ATTACHMENT_NONE) { GL11.glDrawBuffer(GL11.GL_NONE); maxTarget = 0; }
 		else if(isMultisampled() || colorAttachmentType == COLOR_ATTACHMENT_BUFFER) {
 			createColorBufferAttachments(maxTarget);
 			if(reserve == null) reserve = new FBO(width, height, depthAttachmentType, 1, maxTarget);
@@ -110,6 +106,23 @@ public class FBO {
 		startFrame();
 	}
 	
+	/**  */
+	public static void applyDepth(final float depth) { GL11.glClearDepth(depth); startFrame(); GL11.glClearDepth(1); }
+	
+	/***/
+	public static void scissor(int startX, int startY, int endX, int endY) {
+		GL11.glEnable(GL11.GL_SCISSOR_TEST);
+		GL11.glScissor(startX, startY, endX, endY);
+		GL11.glDisable(GL11.GL_SCISSOR_TEST);
+	}
+	
+	public static void applyDepth(final float depth, final int xStart, final int yStart, final int xEnd, final int yEnd) {
+		GL11.glViewport(xStart, yStart, xEnd, yEnd);
+		GL11.glClearDepth(depth);
+		startFrame();
+		GL11.glClearDepth(1);
+	}
+	
 	public static void unbindFrameBuffer() {
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
 		GL11.glViewport(0, 0, Core.getWidth(), Core.getHeight());
@@ -124,7 +137,6 @@ public class FBO {
 			GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
 			GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0 + i, GL11.GL_TEXTURE_2D, colorTexture[i], 0);
 		}
-		
 	}
 	
 	private void createDepthTextureAttachment() {

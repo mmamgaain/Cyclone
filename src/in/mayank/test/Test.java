@@ -95,10 +95,9 @@ public class Test extends Core {
 		String[] textureFiles = {"res/textures/skyboxes/default/right.png", "res/textures/skyboxes/default/left.png",
 								 "res/textures/skyboxes/default/top.png", "res/textures/skyboxes/default/bottom.png",
 								 "res/textures/skyboxes/default/back.png", "res/textures/skyboxes/default/front.png"};
-		//int skyTextureID = loader.loadTextureCubeMap(width, height, 0, 0, 0.01F, 0.01F);
 		renderer = new MasterRenderer("res/shaders/entity.vs", "res/shaders/entity.fs", "res/shaders/terrain.vs",
 									  "res/shaders/terrain.fs", projection).setLight(light)
-									  .setSky("res/shaders/sky.vs", "res/shaders/sky.fs", loader, textureFiles);
+									  .setSky("res/shaders/sky.vs", "res/shaders/sky.fs", loader, textureFiles, 4);
 		renderer.setStaticEnvironmentMap(renderer.getSkyTexture());
 		//fbo = new WaterFBO(width / 2, height / 2, width / 2, height / 2);
 		//water = new WaterRenderer("res/shaders/water.vs", "res/shaders/water.fs", fbo, projection, loader);
@@ -155,7 +154,7 @@ public class Test extends Core {
 							  		.setFresnelPower(fresnelPower[0]).setTransparency(transparency[0])),
 					  crateModel = new TexturedModel(loader.loadToVAO(boxData.getVertices(), 3, boxData.getIndices(),
 							  		boxData.getTextureCoords(), boxData.getNormals()),
-							  		new Material(loader.loadTexture("res/models/crate/crate.png", 4, 0))
+							  		new Material(loader.loadTexture("res/models/crate/crate.png", 4))
 							  		.setFresnelPower(fresnelPower[0]).setTransparency(transparency[0]));
 		
 		sphere = new Entity(sphereModel).setPosition(position[0], position[1], position[2]).setScale(5, 5, 5).addRotation(0, -0.1F, 0);
@@ -198,7 +197,7 @@ public class Test extends Core {
 	public void update() {
 		handleControls();
 		
-		/*fbo.bindReflectionBuffer();
+		/*fbo.bindReflectionTexture();
 		handleAssets();
 		float d = camera.getPosition().y * 2;
 		camera.changePosition(0, -d, 0).invertPitch();
@@ -207,7 +206,7 @@ public class Test extends Core {
 		
 		view.set(camera.getViewMatrix());
 		
-		/*fbo.bindRefractionBuffer();
+		/*fbo.bindRefractionTexture();
 		handleAssets();
 		renderer.render(view, new Vector4f(0, -1, 0, 60));
 		FBO.unbindFrameBuffer();*/

@@ -42,6 +42,16 @@ public class MasterRenderer {
 		return this;
 	}
 	
+	public MasterRenderer setSky(final String vertexFile, final String fragmentFile, final Loader loader, final String[] textureFiles, final float levelOfDetail) {
+		if(sky == null) sky = new SkyboxRenderer(vertexFile, fragmentFile, projection, loader, textureFiles, levelOfDetail);
+		return this;
+	}
+	
+	public MasterRenderer setSky(final String vertexFile, final String fragmentFile, final Loader loader, final String filename, final float levelOfDetail) {
+		if(sky == null) sky = new SkyboxRenderer(vertexFile, fragmentFile, projection, loader, filename, levelOfDetail);
+		return this;
+	}
+	
 	public MasterRenderer setSky(final String vertexFile, final String fragmentFile, final Loader loader, final int skyCubeTexture) {
 		if(sky == null) sky = new SkyboxRenderer(vertexFile, fragmentFile, projection, loader, skyCubeTexture);
 		return this;

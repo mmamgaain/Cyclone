@@ -13,13 +13,11 @@ import in.mayank.shader.Shader;
 
 public class CardsRenderer extends Renderer {
 	
-	private Shader shader;
+	private final Shader shader;
 	
-	public CardsRenderer(String vertexFile, String fragmentFile) {
-		shader = new Shader(vertexFile, fragmentFile);
-	}
+	public CardsRenderer(final String vertexFile, final String fragmentFile) { shader = new Shader(vertexFile, fragmentFile); }
 	
-	public void render(Cards card) {
+	public void render(final Cards card) {
 		shader.start();
 		RawModel model = Cards.getModel();
 		prepareRender(model);
@@ -33,7 +31,7 @@ public class CardsRenderer extends Renderer {
 		shader.stop();
 	}
 	
-	public void render(List<Cards> cards) {
+	public void render(final List<Cards> cards) {
 		shader.start();
 		RawModel model = Cards.getModel();
 		prepareRender(model);
@@ -49,8 +47,6 @@ public class CardsRenderer extends Renderer {
 		shader.stop();
 	}
 	
-	public void dispose() {
-		shader.dispose();
-	}
+	public void dispose() { shader.dispose(); }
 	
 }

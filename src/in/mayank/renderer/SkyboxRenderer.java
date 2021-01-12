@@ -96,6 +96,14 @@ public class SkyboxRenderer extends Renderer {
 		this(vertexFile, fragmentFile, projection, loader, loader.loadTextureCubeMap(filename));
 	}
 	
+	public SkyboxRenderer(final String vertexFile, final String fragmentFile, final Matrix4f projection, final Loader loader, final String[] textureFiles, final float levelOfDetail) {
+		this(vertexFile, fragmentFile, projection, loader, loader.loadTextureCubeMap(textureFiles, levelOfDetail));
+	}
+	
+	public SkyboxRenderer(final String vertexFile, final String fragmentFile, final Matrix4f projection, final Loader loader, final String filename, final float levelOfDetail) {
+		this(vertexFile, fragmentFile, projection, loader, loader.loadTextureCubeMap(filename, levelOfDetail));
+	}
+	
 	public SkyboxRenderer setTexture(final String[] textureFiles, final Loader loader) { textureID = loader.loadTextureCubeMap(textureFiles); return this; }
 	
 	public SkyboxRenderer setTexture(final String filename, final Loader loader) { textureID = loader.loadTextureCubeMap(filename); return this; }
@@ -142,17 +150,14 @@ class SkyboxShader extends Shader {
 	public int direction;
 	public float rotationSpeed = 0, rotation = 0;
 	
-	public SkyboxShader(String vertexFile, String fragmentFile) {
+	public SkyboxShader(final String vertexFile, final String fragmentFile) {
 		super(vertexFile, fragmentFile);
 		direction = SkyboxRenderer.MOVE_DIRECTION_NONE;
 	}
 	
-	void setRotation(float speed, int direction) {
-		rotationSpeed = speed;
-		this.direction = direction;
-	}
+	void setRotation(final float speed, final int direction) { rotationSpeed = speed; this.direction = direction; }
 	
-	public void loadViewMatrix(Matrix4f viewMatrix) {
+	public void loadViewMatrix(final Matrix4f viewMatrix) {
 		Matrix4f view = new Matrix4f(viewMatrix);
 		view.m30(0);
 		view.m31(0);

@@ -17,14 +17,14 @@ import in.mayank.shader.Shader;
 
 public class ModelRenderer extends Renderer {
 	
-	private ModelShader shader;
+	private final ModelShader shader;
 	protected Light light = null;
 	protected float ambientLightIntensity = 0.2F;
 	protected int staticEnviroMap = NO_TEXTURE;
 	
 	protected float fogDensity = 0F, fogGradient = 1F;
 	
-	public ModelRenderer(String vertexFile, String fragmentFile, Matrix4f projectionMatrix) {
+	public ModelRenderer(final String vertexFile, final String fragmentFile, final Matrix4f projectionMatrix) {
 		shader = new ModelShader(vertexFile, fragmentFile);
 		shader.start();
 		shader.loadProjectionMatrix(projectionMatrix);
@@ -32,68 +32,36 @@ public class ModelRenderer extends Renderer {
 		shader.stop();
 	}
 	
-	public ModelRenderer setFogVariables(float density, float gradient) {
-		fogDensity = density;
-		fogGradient = gradient;
-		return this;
-	}
+	public ModelRenderer setFogVariables(final float density, final float gradient) { fogDensity = density; fogGradient = gradient; return this; }
 	
-	public float getFogDensity() {
-		return fogDensity;
-	}
+	public float getFogDensity() { return fogDensity; }
 	
-	public float getFogGradient() {
-		return fogGradient;
-	}
+	public float getFogGradient() { return fogGradient; }
 	
-	public float getAmbientLightIntensity() {
-		return ambientLightIntensity;
-	}
+	public float getAmbientLightIntensity() { return ambientLightIntensity; }
 	
-	public ModelRenderer setAmbientLightIntensity(float ambientLightIntensity) {
-		this.ambientLightIntensity = Maths.clamp(ambientLightIntensity, 0, 1);
-		return this;
-	}
+	public ModelRenderer setAmbientLightIntensity(final float ambientLightIntensity) { this.ambientLightIntensity = Maths.clamp(ambientLightIntensity, 0, 1); return this; }
 	
-	public Light getLight() {
-		return light;
-	}
+	public Light getLight() { return light; }
 	
-	public ModelRenderer setLight(Light light) {
-		this.light.set(light);
-		return this;
-	}
+	public ModelRenderer setLight(final Light light) { this.light.set(light); return this; }
 	
-	public ModelRenderer setLight(Vector3f position, Vector3f color) {
-		light.setPosition(position).setColor(color);
-		return this;
-	}
+	public ModelRenderer setLight(final Vector3f position, final Vector3f color) { light.setPosition(position).setColor(color); return this; }
 	
-	public ModelRenderer increaseLight(Vector3f position, Vector3f color) {
-		light.increasePosition(position).increaseColor(color);
-		return this;
-	}
+	public ModelRenderer increaseLight(final Vector3f position, final Vector3f color) { light.increasePosition(position).increaseColor(color); return this; }
 	
-	public ModelRenderer increaseLight(float delPosX, float delPosY, float delPosZ, float delColR, float delColG, float delColB) {
+	public ModelRenderer increaseLight(final float delPosX, final float delPosY, final float delPosZ, final float delColR, final float delColG, final float delColB) {
 		light.increasePosition(delPosX, delPosY, delPosZ).increaseColor(delColR, delColG, delColB);
 		return this;
 	}
 	
-	public ModelRenderer setStaticEnvironmentMap(int enviroMap) {
-		staticEnviroMap = enviroMap;
-		return this;
-	}
+	public ModelRenderer setStaticEnvironmentMap(final int enviroMap) { staticEnviroMap = enviroMap; return this; }
 	
-	public ModelRenderer removeStaticEnvironmentMap() {
-		staticEnviroMap = NO_TEXTURE;
-		return this;
-	}
+	public ModelRenderer removeStaticEnvironmentMap() { staticEnviroMap = NO_TEXTURE; return this; }
 	
-	public boolean hasStaticEnvironmentMap() {
-		return staticEnviroMap > NO_TEXTURE;
-	}
+	public boolean hasStaticEnvironmentMap() { return staticEnviroMap > NO_TEXTURE; }
 	
-	protected void prepareRender(RawModel model, Material material) {
+	protected void prepareRender(final RawModel model, final Material material) {
 		prepareRender(model);
 		loadTexture2D(0, material.getDiffuseTexture());
 		loadTexture2D(1, material.getNormalMap());
@@ -102,7 +70,7 @@ public class ModelRenderer extends Renderer {
 		shader.loadMaterial(material);
 	}
 	
-	public void render(Model model, Matrix4f view, Vector4f clipPlane, Light light) {
+	public void render(final Model model, final Matrix4f view, final Vector4f clipPlane, final Light light) {
 		shader.start();
 		shader.loadClipPlane(clipPlane);
 		shader.loadTime((float)Core.getElapsedTimeInSeconds());
@@ -126,26 +94,22 @@ public class ModelRenderer extends Renderer {
 		shader.stop();
 	}
 	
-	public void dispose() {
-		shader.dispose();
-	}
+	public void dispose() { shader.dispose(); }
 	
 }
 
 class ModelShader extends Shader {
 
-	public ModelShader(String vertexFile, String fragmentFile) {
+	public ModelShader(final String vertexFile, final String fragmentFile) {
 		super(vertexFile, fragmentFile);
 		remapTextureSamplerName(0, "material.texture0");
 		remapTextureSamplerName(1, "material.normalMap");
 		remapTextureSamplerName(2, "material.specularMap");
 	}
 	
-	void loadClipPlane(Vector4f clipPlane) {
-		loadUniform("clipPlane", clipPlane);
-	}
+	void loadClipPlane(final Vector4f clipPlane) { loadUniform("clipPlane", clipPlane); }
 	
-	void loadMaterial(Material material) {
+	void loadMaterial(final Material material) {
 		loadUniform("material.hasDiffuseTexture", material.hasDiffuseTexture());
 		loadUniform("material.hasNormalMap", material.hasNormalMap());
 		loadUniform("hasNormalMap", material.hasNormalMap());
@@ -164,38 +128,27 @@ class ModelShader extends Shader {
 		loadUniform("material.fresnelPower", material.getFresnelPower());
 	}
 	
-	void loadSkyColor(float red, float green, float blue) {
-		loadUniform("skyColor", red, green, blue);
-	}
+	void loadSkyColor(final float red, final float green, final float blue) { loadUniform("skyColor", red, green, blue); }
 	
-	void loadFogVariables(float density, float gradient) {
-		loadUniform("fogDensity", density);
-		loadUniform("fogGradient", gradient);
-	}
+	void loadFogVariables(final float density, final float gradient) { loadUniform("fogDensity", density); loadUniform("fogGradient", gradient); }
 	
-	void loadTextureAtlasOffset(Vector2f offset) {
-		loadUniform("offset", offset);
-	}
+	void loadTextureAtlasOffset(final Vector2f offset) { loadUniform("offset", offset); }
 	
-	void loadLight(Light light, Matrix4f view) {
+	void loadLight(final Light light, final Matrix4f view) {
 		loadUniform("lightPos", light.getPosition());
 		loadUniform("lightPosEyeSpace", getLightPositionEyeSpace(light.getPosition(), view));
 		loadUniform("lightColor", light.getColor());
 		loadUniform("lightAttenuation", light.getAttenuation());
 	}
 	
-	private Vector3f getLightPositionEyeSpace(Vector3f pos, Matrix4f view) {
-		Vector4f eyeSpacePos = new Vector4f(pos.x, pos.y, pos.z, 1F);
+	private Vector3f getLightPositionEyeSpace(final Vector3f pos, final Matrix4f view) {
+		final Vector4f eyeSpacePos = new Vector4f(pos.x, pos.y, pos.z, 1F);
 		view.transform(eyeSpacePos, eyeSpacePos);
 		return new Vector3f(eyeSpacePos.x, eyeSpacePos.y, eyeSpacePos.z);
 	}
 	
-	void loadAmbientLightIntensity(float ambient) {
-		loadUniform("ambientLightIntensity", ambient);
-	}
+	void loadAmbientLightIntensity(final float ambient) { loadUniform("ambientLightIntensity", ambient); }
 	
-	void loadHasEnviroMap(boolean enviroMap) {
-		loadUniform("hasEnviroMap", enviroMap);
-	}
+	void loadHasEnviroMap(final boolean enviroMap) { loadUniform("hasEnviroMap", enviroMap); }
 	
 }

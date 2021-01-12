@@ -153,7 +153,7 @@ public abstract class Core {
 		//
 		glEnable(GL30.GL_CLIP_DISTANCE0);
 		glEnable(GL13.GL_MULTISAMPLE);
-		glViewport(0, 0, width, height);	
+		glViewport(0, 0, width, height);
 	}
 	
 	/***/
