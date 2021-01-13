@@ -7,10 +7,10 @@ import in.mayank.shader.ShaderProgram;
 
 public class HorizontalBlurFilter extends PostProcessing {
 	
-	private PostRenderer renderer;
-	private HorizontalBlurShader shader;
+	private final PostRenderer renderer;
+	private final HorizontalBlurShader shader;
 	
-	public HorizontalBlurFilter(String vertexFile, String fragmentFile) {
+	public HorizontalBlurFilter(final String vertexFile, final String fragmentFile) {
 		renderer = new PostRenderer();
 		shader = new HorizontalBlurShader(vertexFile, fragmentFile);
 		shader.start();
@@ -18,7 +18,7 @@ public class HorizontalBlurFilter extends PostProcessing {
 		shader.stop();
 	}
 	
-	public HorizontalBlurFilter(int width, int height, String vertexFile, String fragmentFile, int samples, int targets) {
+	public HorizontalBlurFilter(final int width, final int height, final String vertexFile, final String fragmentFile, final int samples, final int targets) {
 		renderer = new PostRenderer(width, height, FBO.COLOR_ATTACHMENT_TEXTURE, FBO.DEPTH_ATTACHMENT_BUFFER, samples, targets);
 		shader = new HorizontalBlurShader(vertexFile, fragmentFile);
 		shader.start();
@@ -26,36 +26,25 @@ public class HorizontalBlurFilter extends PostProcessing {
 		shader.stop();
 	}
 	
-	public void render(int colorTexture) {
+	public void render(final int colorTexture) {
 		shader.start();
 		bindTexture(colorTexture, 0);
 		renderer.render();
 		shader.stop();
 	}
 	
-	public int getOutputTexture() {
-		return getOutputTexture(0);
-	}
+	public int getOutputTexture() { return getOutputTexture(0); }
 	
-	protected int getOutputTexture(int attachment) {
-		return renderer.getOutputTexture(attachment);
-	}
+	protected int getOutputTexture(final int attachment) { return renderer.getOutputTexture(attachment); }
 	
-	public void dispose() {
-		renderer.dispose();
-		shader.dispose();
-	}
+	public void dispose() { renderer.dispose(); shader.dispose(); }
 	
 }
 
 class HorizontalBlurShader extends ShaderProgram {
 	
-	HorizontalBlurShader(String vertexFile, String fragmentFile) {
-		super(vertexFile, fragmentFile);
-	}
+	HorizontalBlurShader(final String vertexFile, final String fragmentFile) { super(vertexFile, fragmentFile); }
 	
-	void loadPixelSize(int width) {
-		loadUniform("pixelSize", 1F / width);
-	}
+	void loadPixelSize(final int width) { loadUniform("pixelSize", 1F / width); }
 	
 }

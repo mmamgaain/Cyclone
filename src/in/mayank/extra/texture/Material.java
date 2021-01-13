@@ -33,10 +33,7 @@ public class Material {
 	
 	public Material(final int texture) { this.texture = texture; }
 	
-	public Material(final int texture, final Vector2f rows) {
-		this.texture = texture;
-		this.rows.set(rows);
-	}
+	public Material(final int texture, final Vector2f rows) { this.texture = texture; this.rows.set(rows); }
 	
 	public Material(final Material material) { set(material); }
 	

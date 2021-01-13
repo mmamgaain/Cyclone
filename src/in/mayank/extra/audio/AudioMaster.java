@@ -34,42 +34,39 @@ public class AudioMaster {
 							DISTANCE_ATTENUATION_MODEL_INVERSE_CLAMPED 	= AL10.AL_INVERSE_DISTANCE_CLAMPED;
 	
 	private static List<Integer> buffers = new ArrayList<>();
-	private static long device, context;
+	private static long device = -1, context = -1;
 	
 	/** Initializes the OpenAL specific functions. This should be called
 	 * before calling anything from this package. */
 	public static boolean init() {
-		device = ALC10.alcOpenDevice((ByteBuffer)null);
+		if(device == -1) device = ALC10.alcOpenDevice((ByteBuffer)null);
 		
-		context = ALC10.alcCreateContext(device, (IntBuffer)null);
+		if(context == -1) context = ALC10.alcCreateContext(device, (IntBuffer)null);
 		
 		ALC10.alcMakeContextCurrent(context);
 		AL.createCapabilities(ALC.createCapabilities(device));
 		
-		return AL10.alGetError() != AL10.AL_NO_ERROR ? false : true;
+		return AL10.alGetError() == AL10.AL_NO_ERROR;
 	}
 	
-	public static void setListenerData(float x, float y, float z, float vx, float vy, float vz) {
+	public static void setListenerData(final float x, final float y, final float z, final float vx, final float vy, final float vz) {
 		AL10.alListener3f(AL10.AL_POSITION, x, y, z);
 		AL10.alListener3f(AL10.AL_VELOCITY, vx, vy, vz);
 	}
 	
-	public static void setDistanceModel(int model) {
-		AL10.alDistanceModel(model);
-	}
+	public static void setDistanceModel(final int model) { AL10.alDistanceModel(model); }
 	
-	public static int loadSound(String fileName) {
-		int buffer = AL10.alGenBuffers();
+	public static int loadSound(final String fileName) {
+		final int buffer = AL10.alGenBuffers();
 		buffers.add(buffer);
-		WaveData wave = WaveData.create(fileName);
+		final WaveData wave = WaveData.create(fileName);
 		AL10.alBufferData(buffer, wave.format, wave.data, wave.sampleRate);
 		wave.dispose();
 		return buffer;
 	}
 	
 	public static void dispose() {
-		for(int i = 0; i < buffers.size(); i++)
-			AL10.alDeleteBuffers(buffers.get(i));
+		for(int i = 0; i < buffers.size(); i++) AL10.alDeleteBuffers(buffers.get(i));
 		ALC10.alcDestroyContext(context);
 		ALC10.alcCloseDevice(device);
 	}
@@ -85,9 +82,9 @@ class WaveData {
 	private final AudioInputStream audioStream;
 	private final byte[] dataArray;
 	
-	private WaveData(AudioInputStream stream) {
+	private WaveData(final AudioInputStream stream) {
 		audioStream = stream;
-		AudioFormat format = stream.getFormat();
+		final AudioFormat format = stream.getFormat();
 		this.format = getOpenALFormat(format.getChannels(), format.getSampleSizeInBits());
 		sampleRate = (int) format.getSampleRate();
 		totalBytes = (int) stream.getFrameLength() * format.getFrameSize();
@@ -98,19 +95,16 @@ class WaveData {
 	
 	private ByteBuffer loadData() {
 		try {
-			int bytesRead = audioStream.read(dataArray, 0, totalBytes);
+			final int bytesRead = audioStream.read(dataArray, 0, totalBytes);
 			data.clear();
 			data.put(dataArray, 0, bytesRead);
 			data.flip();
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.err.println("Couldn't read bytes from audio stream!");
-		}
+		} catch (IOException e) { e.printStackTrace(); System.err.println("Couldn't read bytes from audio stream!"); }
 		return data;
 	}
 	
-	public static WaveData create(String fileName) {
-		InputStream stream = null;
+	public static WaveData create(final String fileName) {
+		final InputStream stream;
 		try {
 			stream = new FileInputStream(new File(fileName));
 		} catch (FileNotFoundException e) {
@@ -118,19 +112,19 @@ class WaveData {
 			e.printStackTrace();
 			return null;
 		}
-		InputStream bufferedInput = new BufferedInputStream(stream);
+		final InputStream bufferedInput = new BufferedInputStream(stream);
 		AudioInputStream audioStream = null;
 		try {
 			audioStream = AudioSystem.getAudioInputStream(bufferedInput);
 		} catch (UnsupportedAudioFileException | IOException e) {
 			e.printStackTrace();
 		}
-		WaveData waveStream = new WaveData(audioStream);
+		final WaveData waveStream = new WaveData(audioStream);
 		
 		return waveStream;
 	}
 	
-	private static int getOpenALFormat(int channels, int bitsPerSample) {
+	private static int getOpenALFormat(final int channels, final int bitsPerSample) {
 		return channels == 1 ? (bitsPerSample == 8 ? AL10.AL_FORMAT_MONO8 : AL10.AL_FORMAT_MONO16) : (bitsPerSample == 8 ? AL10.AL_FORMAT_STEREO8 : AL10.AL_FORMAT_STEREO16);
 	}
 	
@@ -138,6 +132,6 @@ class WaveData {
 		try {
 			audioStream.close();
 			data.clear();
-		} catch (IOException e) {e.printStackTrace();System.err.println("Problem occured while closing the audio stream.");}
+		} catch (IOException e) { e.printStackTrace(); System.err.println("Problem occured while closing the audio stream."); }
 	}
 }

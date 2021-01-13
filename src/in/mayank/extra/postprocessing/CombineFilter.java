@@ -9,20 +9,17 @@ import in.mayank.shader.Shader;
 
 public class CombineFilter {
 	
-	private PostRenderer renderer;
-	private Shader shader;
+	private final PostRenderer renderer;
+	private final Shader shader;
 	
-	public CombineFilter(String vertexFile, String fragmentFile) {
-		shader = new Shader(vertexFile, fragmentFile);
-		renderer = new PostRenderer();
-	}
+	public CombineFilter(final String vertexFile, final String fragmentFile) { shader = new Shader(vertexFile, fragmentFile); renderer = new PostRenderer(); }
 	
-	public CombineFilter(int width, int height, String vertexFile, String fragmentFile, int samples, int maxTargets) {
+	public CombineFilter(final int width, final int height, final String vertexFile, final String fragmentFile, final int samples, final int maxTargets) {
 		shader = new Shader(vertexFile, fragmentFile);
 		renderer = new PostRenderer(width, height, FBO.COLOR_ATTACHMENT_TEXTURE, FBO.DEPTH_ATTACHMENT_BUFFER, samples, maxTargets);
 	}
 	
-	public void render(int texture0, int texture1) {
+	public void render(final int texture0, final int texture1) {
 		shader.start();
 		GL20.glActiveTexture(GL20.GL_TEXTURE0);
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture0);
@@ -32,13 +29,8 @@ public class CombineFilter {
 		shader.stop();
 	}
 	
-	public int getOutputTexture(int attachment) {
-		return renderer.getOutputTexture(attachment);
-	}
+	public int getOutputTexture(final int attachment) { return renderer.getOutputTexture(attachment); }
 	
-	public void dispose() {
-		renderer.dispose();
-		shader.dispose();
-	}
+	public void dispose() { renderer.dispose(); shader.dispose(); }
 	
 }

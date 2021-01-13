@@ -22,21 +22,19 @@ import in.mayank.extra.utils.Loader;
 
 public class Model {
 	
-	private Vector3f position = new Vector3f(), rotation = new Vector3f(), scale = new Vector3f(1);
+	private final Vector3f position = new Vector3f(1), rotation = new Vector3f(), scale = new Vector3f(1);
 	
-	private static String directory;
-	private Mesh[] meshes;
+	private final String directory;
+	private final Mesh[] meshes;
 	
-	private static final Material BASE_MATERIAL = new Material(new Vector3f(-1), new Vector3f(-1), new Vector3f(-1));
 	private static final Vector3f INVALID_COLOR = new Vector3f(-1);
+	private static final Material BASE_MATERIAL = new Material(INVALID_COLOR, INVALID_COLOR, INVALID_COLOR);
 	
-	private Material DEFAULT_MATERIAL;
+	private final Material DEFAULT_MATERIAL;
 	
-	public Model(String filename, Loader loader) {
-		this(filename, loader, BASE_MATERIAL);
-	}
+	public Model(final String filename, final Loader loader) { this(filename, loader, BASE_MATERIAL); }
 	
-	public Model(String filename, Loader loader, Material defaultMat) {
+	public Model(final String filename, final Loader loader, final Material defaultMat) {
 		AIScene scene = Assimp.aiImportFile(filename, Assimp.aiProcess_Triangulate | Assimp.aiProcess_JoinIdenticalVertices | Assimp.aiProcess_GenUVCoords |
 													  Assimp.aiProcess_CalcTangentSpace | Assimp.aiProcess_FixInfacingNormals | Assimp.aiProcess_OptimizeMeshes |
 													  Assimp.aiProcess_GenNormals);
@@ -47,42 +45,24 @@ public class Model {
 			System.exit(1);
 		}
 		directory = filename.substring(0, filename.lastIndexOf("/"));
-		DEFAULT_MATERIAL = new Material(defaultMat);
+		DEFAULT_MATERIAL = defaultMat;
 		
 		meshes = processScene(scene, loader);
 		
 		Assimp.aiReleaseImport(scene);
 	}
 	
-	public Model setPosition(Vector3f position) {
-		this.position.set(position);
-		return this;
-	}
+	public Model setPosition(final Vector3f position) { this.position.set(position); return this; }
 	
-	public Model setPosition(float x, float y, float z) {
-		position.set(x, y, z);
-		return this;
-	}
+	public Model setPosition(final float x, final float y, final float z) { position.set(x, y, z); return this; }
 	
-	public Model setRotation(Vector3f rotation) {
-		this.rotation.set(rotation);
-		return this;
-	}
+	public Model setRotation(final Vector3f rotation) { this.rotation.set(rotation); return this; }
 	
-	public Model setRotation(float x, float y, float z) {
-		rotation.set(x, y, z);
-		return this;
-	}
+	public Model setRotation(final float x, final float y, final float z) { rotation.set(x, y, z); return this; }
 	
-	public Model setScale(Vector3f scale) {
-		this.scale.set(scale);
-		return this;
-	}
+	public Model setScale(final Vector3f scale) { this.scale.set(scale); return this; }
 	
-	public Model setScale(float x, float y, float z) {
-		scale.set(x, y, z);
-		return this;
-	}
+	public Model setScale(final float x, final float y, final float z) { scale.set(x, y, z); return this; }
 	
 	public Vector3f getPosition() { return position; }
 	
@@ -90,24 +70,22 @@ public class Model {
 	
 	public Vector3f getScale() { return scale; }
 	
-	public Mesh[] getMeshes() {
-		return meshes;
-	}
+	public Mesh[] getMeshes() { return meshes; }
 	
-	private Mesh[] processScene(AIScene scene, Loader loader) {
+	private Mesh[] processScene(final AIScene scene, final Loader loader) {
 		// Process materials, if any
-		int numMaterials = scene.mNumMaterials();
-		PointerBuffer aiMaterials = scene.mMaterials();
-		List<Material> materials = new ArrayList<>();
+		final int numMaterials = scene.mNumMaterials();
+		final PointerBuffer aiMaterials = scene.mMaterials();
+		final List<Material> materials = new ArrayList<>();
 		for(int i = 0; i < numMaterials; i++) {
 			AIMaterial material = AIMaterial.create(aiMaterials.get(i));
 			processMaterial(material, materials, loader);
 		}
 		
 		// Process all the mesh data
-		int numMeshes = scene.mNumMeshes();
-		PointerBuffer aiMeshes = scene.mMeshes();
-		Mesh[] meshes = new Mesh[numMeshes];
+		final int numMeshes = scene.mNumMeshes();
+		final PointerBuffer aiMeshes = scene.mMeshes();
+		final Mesh[] meshes = new Mesh[numMeshes];
 		for(int i = 0; i < numMeshes; i++) {
 			AIMesh aiMesh = AIMesh.create(aiMeshes.get(i));
 			Mesh mesh = processMesh(aiMesh, materials, loader);
@@ -117,12 +95,12 @@ public class Model {
 		return meshes;
 	}
 	
-	private void processMaterial(AIMaterial aiMaterial, List<Material> materials, Loader loader) {
-		int diffuseTexture = 0, normalMap = 0, specularMap = 0;
-		Vector3f ambientColor = new Vector3f(), diffuseColor = new Vector3f(), specularColor = new Vector3f();
+	private void processMaterial(final AIMaterial aiMaterial, final List<Material> materials, final Loader loader) {
+		final int diffuseTexture, normalMap, specularMap;
+		final Vector3f ambientColor = INVALID_COLOR, diffuseColor = INVALID_COLOR, specularColor = INVALID_COLOR;
 		
-		AIColor4D color = AIColor4D.create();
-		AIString path = AIString.calloc();
+		final AIColor4D color = AIColor4D.create();
+		final AIString path = AIString.calloc();
 		String texturePath;
 		if(DEFAULT_MATERIAL.hasDiffuseTexture()) diffuseTexture = DEFAULT_MATERIAL.getDiffuseTexture();
 		else {
@@ -149,36 +127,37 @@ public class Model {
 		}
 		//path.free();
 		
-		if(!DEFAULT_MATERIAL.getAmbientColor().equals(INVALID_COLOR)) ambientColor.set(DEFAULT_MATERIAL.getAmbientColor());
+		if(DEFAULT_MATERIAL.getAmbientColor().equals(INVALID_COLOR)) ambientColor.set(DEFAULT_MATERIAL.getAmbientColor());
 		else if(Assimp.aiGetMaterialColor(aiMaterial, Assimp.AI_MATKEY_COLOR_AMBIENT, Assimp.aiTextureType_NONE, 0, color) == Assimp.aiReturn_SUCCESS)
 			ambientColor.set(color.r(), color.g(), color.b());
-		else ambientColor.set(0, 0, 0);
+		else ambientColor.set(0);
 		
-		if(!DEFAULT_MATERIAL.getDiffuseColor().equals(INVALID_COLOR)) diffuseColor.set(DEFAULT_MATERIAL.getDiffuseColor());
+		if(DEFAULT_MATERIAL.getDiffuseColor().equals(INVALID_COLOR)) diffuseColor.set(DEFAULT_MATERIAL.getDiffuseColor());
 		else if(Assimp.aiGetMaterialColor(aiMaterial, Assimp.AI_MATKEY_COLOR_DIFFUSE, Assimp.aiTextureType_NONE, 0, color) == Assimp.aiReturn_SUCCESS)
 			diffuseColor.set(color.r(), color.g(), color.b());
-		else diffuseColor.set(0, 0, 0);
+		else diffuseColor.set(0);
 		
-		if(!DEFAULT_MATERIAL.getSpecularColor().equals(INVALID_COLOR)) specularColor.set(DEFAULT_MATERIAL.getSpecularColor());
+		if(DEFAULT_MATERIAL.getSpecularColor().equals(INVALID_COLOR)) specularColor.set(DEFAULT_MATERIAL.getSpecularColor());
 		else if(Assimp.aiGetMaterialColor(aiMaterial, Assimp.AI_MATKEY_COLOR_SPECULAR, Assimp.aiTextureType_NONE, 0, color) == Assimp.aiReturn_SUCCESS)
 			specularColor.set(color.r(), color.g(), color.b());
-		else specularColor.set(0, 0, 0);
+		else specularColor.set(0);
 		//color.free();
 		
 		materials.add(new Material(diffuseColor, ambientColor, specularColor).setDiffuseTexture(diffuseTexture).setNormalMap(normalMap).setSpecularMap(specularMap)
 																			 .setEnviroRefractivity(DEFAULT_MATERIAL.getEnviroRefractivity())
 																			 .setIsDoubleSided(DEFAULT_MATERIAL.isDoubleSided())
 																			 .setShineValues(DEFAULT_MATERIAL.getShineDamper(), DEFAULT_MATERIAL.getSpecularReflectivity())
-																			 .setTransparency(DEFAULT_MATERIAL.getTransparency()));
+																			 .setTransparency(DEFAULT_MATERIAL.getTransparency()).setHasFresnel(DEFAULT_MATERIAL.hasFresnel())
+																			 .setFresnelPower(DEFAULT_MATERIAL.getFresnelPower()));
 	}
 	
-	private Mesh processMesh(AIMesh aiMesh, List<Material> materials, Loader loader) {
-		FloatBuffer vertices, textureCoords, normals, tangents, bitangents;
-		IntBuffer indices;
+	private Mesh processMesh(final AIMesh aiMesh, final List<Material> materials, final Loader loader) {
+		final FloatBuffer vertices, textureCoords, normals, tangents, bitangents;
+		final IntBuffer indices;
 		
 		// Process vertices
-		AIVector3D.Buffer aiVertices = aiMesh.mVertices();
-		AIVector3D aiVertexCoords = null;
+		final AIVector3D.Buffer aiVertices = aiMesh.mVertices();
+		AIVector3D aiVertexCoords;
 		vertices = BufferUtils.createFloatBuffer(aiMesh.mNumVertices() * 3);
 		if(aiVertices != null) {
 			while(aiVertices.remaining() > 0) {
@@ -191,9 +170,9 @@ public class Model {
 		vertices.flip();
 		
 		// Process texture coordinates
-		AIVector3D.Buffer aiTextures = aiMesh.mTextureCoords(0);
+		final AIVector3D.Buffer aiTextures = aiMesh.mTextureCoords(0);
 		AIVector3D aiTextureCoords = null;
-		int numTextureCoords = aiMesh.mNumVertices() * 2;
+		final int numTextureCoords = aiMesh.mNumVertices() * 2;
 		textureCoords = BufferUtils.createFloatBuffer(numTextureCoords);
 		if(aiTextures != null) {
 			while(aiTextures.remaining() > 0) {
@@ -207,7 +186,7 @@ public class Model {
 		textureCoords.flip();
 		
 		// Process normals
-		AIVector3D.Buffer aiNormals = aiMesh.mNormals();
+		final AIVector3D.Buffer aiNormals = aiMesh.mNormals();
 		AIVector3D aiNormalsCoords = null;
 		normals = BufferUtils.createFloatBuffer(aiNormals.limit() * 3);
 		if(aiNormals != null) {
@@ -221,7 +200,7 @@ public class Model {
 		normals.flip();
 		
 		// Process indices
-		AIFace.Buffer aiFaces = aiMesh.mFaces();
+		final AIFace.Buffer aiFaces = aiMesh.mFaces();
 		indices = BufferUtils.createIntBuffer(aiMesh.mNumFaces() * 3);
 		if(aiFaces != null) {
 			while(aiFaces.remaining() > 0) indices.put(aiFaces.get().mIndices());
@@ -230,9 +209,9 @@ public class Model {
 		indices.flip();
 		
 		// Process tangents
-		AIVector3D.Buffer aiTangents = aiMesh.mTangents();
+		final AIVector3D.Buffer aiTangents = aiMesh.mTangents();
 		AIVector3D aiTangentsCoords = null;
-		int numNormals = normals.limit();
+		final int numNormals = normals.limit();
 		tangents = BufferUtils.createFloatBuffer(numNormals);
 		if(aiTangents != null) {
 			while(aiTangents.remaining() > 0) {
@@ -246,7 +225,7 @@ public class Model {
 		tangents.flip();
 		
 		// Process bitangents
-		AIVector3D.Buffer aiBitangents = aiMesh.mBitangents();
+		final AIVector3D.Buffer aiBitangents = aiMesh.mBitangents();
 		AIVector3D aiBitangentsCoords = null;
 		bitangents = BufferUtils.createFloatBuffer(numNormals);
 		if(aiBitangents != null) {
@@ -260,8 +239,8 @@ public class Model {
 		else for(int i = 0; i < numNormals; i++) bitangents.put(0);
 		bitangents.flip();
 		
-		Material material;
-		int materialIndex = aiMesh.mMaterialIndex();
+		final Material material;
+		final int materialIndex = aiMesh.mMaterialIndex();
 		if(materialIndex >= 0 && materialIndex < materials.size()) material = materials.get(materialIndex);
 		else material = DEFAULT_MATERIAL;
 		
@@ -269,10 +248,12 @@ public class Model {
 	}
 	
 	public class Mesh {
-		public RawModel model;
-		public Material material;
+		public final RawModel model;
+		public final Material material;
 		
-		public Mesh(FloatBuffer position, FloatBuffer textureCoords, FloatBuffer normals, FloatBuffer tangents, FloatBuffer bitangents, IntBuffer indices, Material material, Loader loader) {
+		public Mesh(final FloatBuffer position, final FloatBuffer textureCoords, final FloatBuffer normals,
+					final FloatBuffer tangents, final FloatBuffer bitangents, 	 final IntBuffer indices,
+					final Material material, 	final Loader loader) {
 			this.material = material;
 			model = loader.loadToVAO(position, 3, indices, textureCoords, normals, tangents, bitangents);
 		}

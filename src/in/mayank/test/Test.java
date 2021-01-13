@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
@@ -19,16 +20,18 @@ import in.mayank.extra.model.Model.Mesh;
 import in.mayank.extra.model.ModelData;
 import in.mayank.extra.model.RawModel;
 import in.mayank.extra.model.TexturedModel;
+import in.mayank.extra.model.WaterTile;
 import in.mayank.extra.texture.Material;
 import in.mayank.extra.utils.Camera1P;
 import in.mayank.extra.utils.Light;
 import in.mayank.extra.utils.Loader;
 import in.mayank.extra.utils.Maths;
 import in.mayank.extra.utils.OBJLoader;
-import in.mayank.extra.utils.ParticleMaster;
+import in.mayank.extra.utils.WaterFBO;
 import in.mayank.renderer.MasterRenderer;
 import in.mayank.renderer.ModelRenderer;
 import in.mayank.renderer.Renderer;
+import in.mayank.renderer.WaterRenderer;
 
 public class Test extends Core {
 	
@@ -62,34 +65,34 @@ public class Test extends Core {
 	};*/ 
 	
 	private GameAction exit, forward, backward, left, right, panLeft, panRight, panUp, panDown, up, down, sprint, crawl, normal;
-	private Loader loader;
+	private final Loader loader;
 	private Entity sphere, dragon, sphere2;
-	private List<Entity> boxes;
-	private Camera1P camera;
-	private Matrix4f view;
-	private MasterRenderer renderer;
+	private final List<Entity> boxes;
+	private final Camera1P camera;
+	private final Matrix4f view;
+	private final MasterRenderer renderer;
 	private float moveFactor = 0.3F, rotFactor = 0.01F;
-	/*private WaterFBO fbo;
-	private WaterRenderer water;
-	private List<WaterTile> tiles;*/
+	private final WaterFBO fbo;
+	private final WaterRenderer water;
+	private final List<WaterTile> tiles;
 	private final Light light;
-	private Model model;
-	private ModelRenderer mRenderer;
+	private final Model model;
+	private final ModelRenderer mRenderer;
 	private int sphereNormal, sphere2Normal, dragonNormal;
-	private ImGuiLayer imgui;
+	private final ImGuiLayer imgui;
 	private final float[] color = { 1F, 0F, 0F }, position = { 0F, 10F, -20F }, fresnelPower = { 2 }, transparency = { 0 }, lightColor = { /*0.529F, 0.807F, 0.980F*/1.0F, 0.639F, 0.223F };
 	private boolean hasFresnel = true;
 	public final ExampleUi exampleUi;
 	
 	public Test() {
-		setVSync(0);
+		setVSync(1);
 		//setFullscreen(false);
 		init();
 		//setCursorDisabled(true);
 		
 		loader = new Loader();
 		camera = new Camera1P().setPosition(0, 10, 0);
-		Matrix4f projection = Maths.createPerspectiveProjectionMatrix(80, 0.1F, 1000);
+		Matrix4f projection = Maths.createPerspectiveProjectionMatrix(70, 0.1F, 1000);
 		view = new Matrix4f();
 		light = new Light(new Vector3f(10000, 10000, 10000), new Vector3f(lightColor[0], lightColor[1], lightColor[2]));
 		String[] textureFiles = {"res/textures/skyboxes/default/right.png", "res/textures/skyboxes/default/left.png",
@@ -97,13 +100,12 @@ public class Test extends Core {
 								 "res/textures/skyboxes/default/back.png", "res/textures/skyboxes/default/front.png"};
 		renderer = new MasterRenderer("res/shaders/entity.vs", "res/shaders/entity.fs", "res/shaders/terrain.vs",
 									  "res/shaders/terrain.fs", projection).setLight(light)
-									  .setSky("res/shaders/sky.vs", "res/shaders/sky.fs", loader, textureFiles, 4);
+									  .setSky("res/shaders/sky.vs", "res/shaders/sky.fs", loader, textureFiles);
 		renderer.setStaticEnvironmentMap(renderer.getSkyTexture());
-		//fbo = new WaterFBO(width / 2, height / 2, width / 2, height / 2);
-		//water = new WaterRenderer("res/shaders/water.vs", "res/shaders/water.fs", fbo, projection, loader);
-		//tiles = new ArrayList<>();
+		fbo = new WaterFBO(width / 2, height / 2, width / 2, height / 2);
+		water = new WaterRenderer("res/shaders/water.vs", "res/shaders/water.fs", fbo, projection, loader);
+		tiles = new ArrayList<>();
 		mRenderer = new ModelRenderer("res/shaders/entity.vs", "res/shaders/entity.fs", projection).setStaticEnvironmentMap(renderer.getSkyTexture());
-		ParticleMaster.init("res/shaders/particle.vs", "res/shaders/particle.fs", loader, projection);
 		boxes = new ArrayList<>();
 		imgui = new ImGuiLayer(getGLFWWindow());
 		imgui.initImGui();
@@ -111,14 +113,33 @@ public class Test extends Core {
 		initControls();
 		initAssets();
 		
-		Material mat = new Material(/*loader.loadTexture("res/textures/grass.png", 4, 0)*/new Vector3f(0.133F, 0.545F, 0.133F), new Vector3f(1), new Vector3f(0.874F, 0.564F, 0.234F))
+		Material mat = new Material(/*loader.loadTexture("res/textures/grass.png", 4)*/new Vector3f(0.133F, 0.545F, 0.133F), new Vector3f(1), new Vector3f(0.874F, 0.564F, 0.234F))
 					.setIsDoubleSided(true).setNormalMap(sphereNormal).setShineValues(20, 1).setFresnelPower(fresnelPower[0]);
 		//Material mat = new Material(loader.loadTexture("res/models/crate/crate.png", 4));
 		//Material mat = new Material(loader.loadTexture("res/models/barrel/textures/barrel_d.jpg", 4)).setNormalMap(loader.loadTexture("res/models/barrel/textures/barrel_n.jpg")).setSpecularMap(loader.loadTexture("res/models/barrel/textures/barrel_s.jpg"));
-		model = new Model("res/models/monkey.obj", loader/*, mat*/).setPosition(-20, 10, -25).setRotation(0, 0.1F, 0);
+		model = new Model("res/models/monkey.obj", loader, mat).setPosition(-20, 10, -25).setRotation(0, 0.1F, 0);
 		exampleUi = new ExampleUi();
 		
 		startGame();
+	}
+	
+	private void initControls() {
+		mapToKey(exit = new GameAction(), GLFW.GLFW_KEY_ESCAPE);
+		mapToKey(forward = new GameAction(), GLFW.GLFW_KEY_W);
+		mapToKey(backward = new GameAction(), GLFW.GLFW_KEY_S);
+		mapToKey(left = new GameAction(), GLFW.GLFW_KEY_A);
+		mapToKey(right = new GameAction(), GLFW.GLFW_KEY_D);
+		/*mapToMouse(panLeft = new GameAction(), MM_LEFT);
+		mapToMouse(panRight = new GameAction(), MM_RIGHT);
+		mapToMouse(panUp = new GameAction(), MM_UP);
+		mapToMouse(panDown = new GameAction(), MM_DOWN);*/
+		mapToKey(panLeft = new GameAction(), GLFW.GLFW_KEY_LEFT);
+		mapToKey(panRight = new GameAction(), GLFW.GLFW_KEY_RIGHT);
+		mapToKey(up = new GameAction(), GLFW.GLFW_KEY_UP);
+		mapToKey(down = new GameAction(), GLFW.GLFW_KEY_DOWN);
+		mapToKey(sprint = new GameAction(), GLFW.GLFW_KEY_LEFT_SHIFT);
+		mapToKey(crawl = new GameAction(), GLFW.GLFW_KEY_LEFT_CONTROL);
+		mapToKey(normal = new GameAction(GameAction.BEHAVIOUR_DETECT_INITIAL_PRESS_ONLY), GLFW.GLFW_KEY_SPACE);
 	}
 	
 	private void initAssets() {
@@ -138,7 +159,7 @@ public class Test extends Core {
 		RawModel sphereRaw = loader.loadToVAO(sphereData.getVertices(), 3, sphereData.getIndices(), sphereData.getTextureCoords(),
 											  sphereData.getNormals(), sphereData.getTangents());
 		
-		sphereNormal = loader.loadTexture("res/textures/collection/159_norm.JPG;true", 4, 0);
+		sphereNormal = loader.loadTexture("res/textures/collection/159_norm.JPG", 4, 0);
 		sphere2Normal = loader.loadTexture("res/textures/collection/188_norm2.JPG", 4, 0);
 		dragonNormal = loader.loadTexture("res/textures/collection/158_norm.JPG", 4, 0);
 		
@@ -166,32 +187,13 @@ public class Test extends Core {
 		// Cards
 		
 		// Water tiles
-		/*tiles.add(new WaterTile(0, -400, 800, 400, 0).setShineVariables(20, 1).setWaveVariables(0.01F, new Vector2f(0.01F, -0.01F), 0.01F)
+		tiles.add(new WaterTile(0, -400, 800, 400, 0).setShineVariables(20, 1).setWaveVariables(0.01F, new Vector2f(0.01F, -0.01F), 0.01F)
 				.setDistortionMap(loader.loadTexture("res/textures/dudvmaps/water.png")).setClarity(0.85F)
-				.setNormalMap(loader.loadTexture("res/textures/normalmaps/water.png")));*/
+				.setNormalMap(loader.loadTexture("res/textures/normalmaps/water.png")));
 		
 		// Music
 		
 		// Static text
-	}
-	
-	private void initControls() {
-		mapToKey(exit = new GameAction(), GLFW.GLFW_KEY_ESCAPE);
-		mapToKey(forward = new GameAction(), GLFW.GLFW_KEY_W);
-		mapToKey(backward = new GameAction(), GLFW.GLFW_KEY_S);
-		mapToKey(left = new GameAction(), GLFW.GLFW_KEY_A);
-		mapToKey(right = new GameAction(), GLFW.GLFW_KEY_D);
-		/*mapToMouse(panLeft = new GameAction(), MM_LEFT);
-		mapToMouse(panRight = new GameAction(), MM_RIGHT);
-		mapToMouse(panUp = new GameAction(), MM_UP);
-		mapToMouse(panDown = new GameAction(), MM_DOWN);*/
-		mapToKey(panLeft = new GameAction(), GLFW.GLFW_KEY_LEFT);
-		mapToKey(panRight = new GameAction(), GLFW.GLFW_KEY_RIGHT);
-		mapToKey(up = new GameAction(), GLFW.GLFW_KEY_UP);
-		mapToKey(down = new GameAction(), GLFW.GLFW_KEY_DOWN);
-		mapToKey(sprint = new GameAction(), GLFW.GLFW_KEY_LEFT_SHIFT);
-		mapToKey(crawl = new GameAction(), GLFW.GLFW_KEY_LEFT_CONTROL);
-		mapToKey(normal = new GameAction(GameAction.BEHAVIOUR_DETECT_INITIAL_PRESS_ONLY), GLFW.GLFW_KEY_SPACE);
 	}
 	
 	public void update() {
@@ -271,9 +273,9 @@ public class Test extends Core {
 		if(left.isPressed()) camera.moveLeft(moveFactor);
 		if(right.isPressed()) camera.moveRight(moveFactor);
 		
-		camera/*.changePitch((panUp.getAmount() - panDown.getAmount()) * rotFactor)*/.changeYaw((panRight.getAmount() - panLeft.getAmount()) * rotFactor);
+		camera.changeYaw((panRight.getAmount() - panLeft.getAmount()) * rotFactor);//.changePitch((panUp.getAmount() - panDown.getAmount()) * rotFactor);
 		
-		Vector3f pos = camera.getPosition();
+		final Vector3f pos = camera.getPosition();
 		if(up.isPressed()) pos.y += moveFactor;
 		if(down.isPressed()) pos.y -= moveFactor;
 		camera.setPosition(pos);
@@ -283,16 +285,14 @@ public class Test extends Core {
 			sphere2.setNormalMap(sphere2.hasNormalMap() ? Material.NO_TEXTURE : sphere2Normal);
 			dragon.setNormalMap(dragon.hasNormalMap() ? Material.NO_TEXTURE : dragonNormal);
 		}
-		
 	}
 	
 	public void dispose() {
 		loader.dispose();
 		renderer.dispose();
-		//fbo.dispose();
-		//water.dispose();
+		fbo.dispose();
+		water.dispose();
 		mRenderer.dispose();
-		ParticleMaster.dispose();
 		System.out.println("Total Time : " + getElapsedTimeInSeconds() + " seconds");
 		imgui.dispose();
 	}
